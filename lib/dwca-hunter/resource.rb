@@ -26,7 +26,6 @@ class DwcaHunter
     def unpack_bz2
       DwcaHunter::logger_write(self.object_id, "Unpacking bz2 file, it might take a while...")
       Dir.chdir(@download_dir)
-      require 'ruby-debug'; debugger
       `bunzip2 #{@download_file}`
     end
   end

@@ -2,6 +2,8 @@ require 'logger'
 require 'fileutils'
 require 'uri'
 require 'net/http'
+require 'json'
+require 'dwc-archive'
 require 'dwca-hunter/resource'
 Dir[File.join(File.dirname(__FILE__), "dwca-hunter", "*.rb")].each {|f| require f}
 
@@ -9,6 +11,7 @@ class DwcaHunter
 
   VERSION = open(File.join(File.dirname(__FILE__), '..', 'VERSION')).readline.strip
   DEFAULT_TMP_DIR = "/tmp"
+  BATCH_SIZE = 10_000
 
   def self.logger
     @@logger ||= Logger.new(nil)
@@ -32,7 +35,7 @@ class DwcaHunter
   def process
     download if @resource.needs_download?
     @resource.unpack if @resource.needs_unpack?
-    @resource.collect_data
+    @resource.make_dwca
   end
 
 private
