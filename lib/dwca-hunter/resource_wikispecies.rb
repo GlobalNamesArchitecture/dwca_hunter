@@ -132,10 +132,10 @@ class DwcaHunter
 
     def generate_dwca
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
-      gen = DarwinCore::Generator.new(File.join(@download_dir, "dwca.tar.gz"))
-      core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm"]]
-      core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm]] }
-      eml = {
+      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm"]]
+      @core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm]] }
+      @extensions = []
+      @eml = {
         :id => @uuid,
         :title => @title,
         :license => 'http://creativecommons.org/licenses/by-sa/3.0/',
@@ -151,11 +151,7 @@ class DwcaHunter
             :email => 'dmozzherin@mbl.edu' }],
         :url => 'http://species.wikimedia.org/wiki/Main_Page'
       }
-      gen.add_core(core, 'taxa.txt')
-      gen.add_meta_xml
-      gen.add_eml_xml(eml)
-      gen.pack
-      DwcaHunter::logger_write(self.object_id, "DarwinCore Archive file is created")
+      super
     end
   end
 end

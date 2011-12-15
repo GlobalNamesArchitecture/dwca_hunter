@@ -24,9 +24,33 @@ class DwcaHunter
     end
 
     def unpack_bz2
-      DwcaHunter::logger_write(self.object_id, "Unpacking bz2 file, it might take a while...")
+      DwcaHunter::logger_write(self.object_id, "Unpacking a bz2 file, it might take a while...")
       Dir.chdir(@download_dir)
       `bunzip2 #{@download_file}`
+    end
+
+    def unpack_zip
+      DwcaHunter::logger_write(self.object_id, "Unpacking a zip file, it might take a while...")
+      Dir.chdir(@download_dir)
+      `unzip #{@download_file}`
+    end
+
+    def unpack_tar
+      DwcaHunter::logger_write(self.object_id, "Unpacking a tar file, it might take a while...")
+      Dir.chdir(@download_dir)
+      `tar zxvf #{@download_file}`
+    end
+    
+    def generate_dwca
+      gen = DarwinCore::Generator.new(File.join(@download_dir, "dwca.tar.gz"))
+      gen.add_core(@core, 'taxa.txt')
+      @extensions.each_with_index do |extension, i|
+        gen.add_extension(extension, "extension_#{i}.txt")
+      end
+      gen.add_meta_xml
+      gen.add_eml_xml(@eml)
+      gen.pack
+      DwcaHunter::logger_write(self.object_id, "DarwinCore Archive file is created")
     end
   end
 end

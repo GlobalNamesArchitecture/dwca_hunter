@@ -5,6 +5,7 @@ require 'net/http'
 require 'json'
 require 'dwc-archive'
 require 'dwca-hunter/resource'
+require 'iconv'
 Dir[File.join(File.dirname(__FILE__), "dwca-hunter", "*.rb")].each {|f| require f}
 
 class DwcaHunter
