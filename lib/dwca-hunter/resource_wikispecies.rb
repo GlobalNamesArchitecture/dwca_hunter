@@ -8,6 +8,19 @@ class DwcaHunter
       @url = opts[:url] if opts[:url]
       @uuid = "68923690-0727-473c-b7c5-2ae9e601e3fd"
       @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter", "wikispecies", "data.xml.bz2")
+      @data = []
+      @templates = {}
+      @tree = {}
+      @re = {
+        :page_start => /^\s*\<page\>\s*$/,
+        :title => /\<title\>(.*)\<\/title\>/,
+        :id => /^\s*\<id\>(.*)\<\/id\>\s*$/,
+        :name => /\=\=\s*Name\s*\=\=/i,
+        :classification => /\=\=\s*Taxonavigation\s*\=\=/i,
+        :template => /Template:/i,
+        :template_link => /\{\{([^\}]*)\}\}/,
+        :page_end => /^\s*\<\/page\>\s*$/
+      }
       super(opts)
     end
 
@@ -17,7 +30,7 @@ class DwcaHunter
 
     def make_dwca
       enrich_data
-      process_data
+      require 'ruby-debug'; debugger
       generate_dwca
     end
 
@@ -25,88 +38,92 @@ class DwcaHunter
 
     def enrich_data
       DwcaHunter::logger_write(self.object_id, "Extracting data from xml file...")
-      page_start = /^\s*\<page\>\s*$/
-      title_re = /\<title\>(.*)\<\/title\>/
-      id_re = /^\s*\<id\>(.*)\<\/id\>\s*$/
-      name_re = /\=\=\s*Name\s*\=\=/i
-      classification_re = /\=\=\s*Taxonavigation\s*\=\=/i
-      page_end = /^\s*\<\/page\>\s*$/
-
       Dir.chdir(@download_dir)
       f = open('data.xml', 'r:utf-8')
-      species_on = false
-      get_page_info = false
-      title = nil
-      id = nil
-      count = 0
-      @data = []
-      data_blob = nil
+      page_on = false
+      page = ""
+      page_num = 0
       f.each do |l|
-        if !get_page_info && l.match(page_start)
-          get_page_info = true
-        elsif get_page_info
-          if title_match = l.match(title_re)
-            title = title_match[1]
-          elsif id_match = l.match(id_re)
-            id = id_match[1]
-            get_page_info = false
-          end
-        end
-        if !species_on && title && !title.match(/Wikispecies/i) && !title.match(/Template:/i) && (l.match(name_re) || l.match(classification_re))
-          species_on = true
-          @data << { canonicalForm: DwcaHunter::XML.unescape(title), taxonId: id }
-          data_blob = [l]
-          count += 1
-          DwcaHunter::logger_write(self.object_id, "Extracted %s species data" % count) if count % BATCH_SIZE == 0
-        elsif species_on
-          data_blob << l
-          if l.match(page_end)
-            species_on = false 
-            @data[-1][:blob] = data_blob
-            data_blob = nil
+        if l.match(@re[:page_start])
+          page << l
+          page_on = true
+        elsif page_on
+          page << l
+          if l.match(@re[:page_end])
+            page_on = false
+            page_xml = Nokogiri::XML.parse(page)
+            template?(page_xml) ? process_template(page_xml) : process_species(page_xml)
+            page_num += 1
+            DwcaHunter::logger_write(self.object_id, "Traversed %s pages" % page_num) if page_num % BATCH_SIZE == 0
+            page = ""
+            @title = nil
           end
         end
       end
-      DwcaHunter::logger_write(self.object_id, "Extracted total %s species data" % count)
+      DwcaHunter::logger_write(self.object_id, "Extracted total %s pages" % page_num)
       f.close
     end
 
-    def process_data
-      @data.each do |taxa|
-        find_name(taxa)
+    def process_template(x)
+      name = title(x).gsub!(@re[:template], '').strip
+      text = x.xpath('//text').text.strip
+      parent_name = text.match(@re[:template_link])
+      if parent_name
+        list = parent_name[1].split("|")
+        if list.size == 1
+          parent_name = list[0]
+        elsif list[0].match /Taxonav/i
+          parent_name = list[1]
+        else
+          parent_name = list[0]
+        end
+      end
+      @templates[name] = { parentName: parent_name, id: x.xpath('//id').text }
+    end
+
+    def process_species(x)
+      return if title(x).match(/Wikispecies/i)
+      items = find_species_components(x)
+      if items
+        @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x)}
+        if items['name'] && (name = items['name'][0])
+          @data[-1][:scientificName] = parse_name(name, @data[-1])
+        end
       end
     end
 
-    def find_name(taxa)
-      name_re = /^\s*\=\=\s*Name\s*\=\=\s*$/i
-      name_index = nil
-      taxa[:scientificName] = taxa[:canonicalForm]
-      taxa[:blob].each_with_index do |l, i|
-        if l.match(name_re)
-          name_index = i + 1
-          break
+    def find_species_components(x)
+      items = get_items(x.xpath('//text').text)
+      return nil unless items.has_key?('name') || items.has_key?('taxonavigation')
+      items
+    end
+
+    def get_items(txt)
+      item_on = false
+      items = {}
+      current_item = nil
+      txt.split("\n").each do |l| 
+        item =  l.match(/[\=]+([^\=]+)[\=]+/)
+        if item
+          current_item = item[1].strip.downcase
+          items[current_item] = []
+        elsif current_item && !l.empty?
+          items[current_item] << l
         end
-        name_index = -1
       end
-      return if name_index == -1
-      while taxa[:blob][name_index].strip.empty?
-        name_index += 1
-      end
-      if name = parse_name(taxa[:blob][name_index].strip, taxa)
-        taxa[:scientificName] = name
-        tmp = "%s\t%s\n" % [taxa[:canonicalForm], taxa[:scientificName]]
-        @tmp.write(tmp)
-      end
+      items
+    end
+
+    def title(x)
+      @title ||= x.xpath('//title').text
+    end
+
+    def template?(page_xml)
+      !!title(page_xml).match(@re[:template])
     end
 
     def parse_name(name_string, taxa)
-      name_string.gsub!(/\<\/text\>/, '')
-      name_string.gsub!(/\<\/comment\>/, '')
       name_string.gsub!('BASEPAGENAME', taxa[:canonicalForm])
-      if name_string.match(/\</) || name_string.match(/\=\=/)
-        puts "%s:::%s" % [taxa[:canonicalForm], name_string]
-        return
-      end
       name_string = name_string.strip
       old_l = name_string.dup
       name_string.gsub! /^\*\s*/, ''
@@ -118,7 +135,7 @@ class DwcaHunter
       name_string.gsub!(/,\s*\[RSD\]/i, '')
       name_string.gsub!(/^\s*†\s*/, '')
       name_string.gsub!(/(:\s*)?\[http:[^\]]+\]/, '')
-      name_string = DwcaHunter::XML.unescape(name_string)
+      # name_string = DwcaHunter::XML.unescape(name_string)
       name_string.gsub!(/\<nowiki\>.*$/, '')
       name_string.gsub!(/\<br\s*[\/]?\s*\>/, '')
       name_string.gsub!(/^\s*\&dagger;\s*/, '')
