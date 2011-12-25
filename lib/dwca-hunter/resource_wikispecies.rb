@@ -12,15 +12,13 @@ class DwcaHunter
       @templates = {}
       @tree = {}
       @paths = {}
+      @extensions = []
       @re = {
         :page_start => /^\s*\<page\>\s*$/,
-        :title => /\<title\>(.*)\<\/title\>/,
-        :id => /^\s*\<id\>(.*)\<\/id\>\s*$/,
-        :name => /\=\=\s*Name\s*\=\=/i,
-        :classification => /\=\=\s*Taxonavigation\s*\=\=/i,
+        :page_end => /^\s*\<\/page\>\s*$/,
         :template => /Template:/i,
         :template_link => /\{\{([^\}]*)\}\}/,
-        :page_end => /^\s*\<\/page\>\s*$/
+        :vernacular_names => /\{\{\s*VN\s*\|([^\}]+)\}\}/i
       }
       super(opts)
     end
@@ -32,9 +30,8 @@ class DwcaHunter
     def make_dwca
       enrich_data
       extend_classification
-      generate_dwca
       require 'ruby-debug'; debugger
-      puts ''
+      generate_dwca
     end
 
   private
@@ -92,14 +89,13 @@ class DwcaHunter
     def update_tree(path)
       path = path.dup
       return if @paths.has_key?(path.join("|"))
-      path.reverse!
       (0...path.size).each do |i|
         subpath = path[0..i]
         subpath_string = subpath.join("|")
         next if @paths.has_key?(subpath_string)
         name = subpath.pop
-        tree_element = subpath.inject(@tree) { |n, res| res[n] }
-        tree_element.merge!({name => {}})
+        tree_element = subpath.inject(@tree) { |res, n| res[n] }
+        tree_element[name] = {}
         @paths[subpath_string] = 1
       end
     end
@@ -126,18 +122,43 @@ class DwcaHunter
       return if title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
-        @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [] }
-        if items['name'] && (name = items['name'][0])
-          @data[-1][:scientificName] = parse_name(name, @data[-1])
+        @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
+        get_full_scientific_name(items)
+        get_vernacular_names(items)
+        init_classification_path(items)
+      end
+    end
+
+    def get_full_scientific_name(items)
+      if items['name'] && (name = items['name'][0])
+        @data[-1][:scientificName] = parse_name(name, @data[-1])
+      end
+    end
+
+    def get_vernacular_names(items)
+      if items['vernacular names'] && items['vernacular names'].size > 0
+        vn_string = items['vernacular names'].join("")
+        vn = vn_string.match(@re[:vernacular_names])
+        if vn
+          vn_list = vn[1].strip.split("|")
+          vnames = []
+          vn_list.each do |item|
+            language, name = item.split("=").map { |x| x.strip }
+            vnames << { name: name, language: language } if language && name && language.size < 4 && name.valid_encoding?
+          end
+          @data[-1][:vernacularNames] = vnames
         end
-        if items['taxonavigation']
-          items['taxonavigation'].each do |i|
-            if link = i.match(@re[:template_link])
-              link = link[1].strip
-              if !link.match(/\|/)
-                @data[-1][:classificationPath] << link
-                break
-              end
+      end
+    end
+
+    def init_classification_path(items)
+      if items['taxonavigation']
+        items['taxonavigation'].each do |i|
+          if link = i.match(@re[:template_link])
+            link = link[1].strip
+            if !link.match(/\|/)
+              @data[-1][:classificationPath] << link
+              break
             end
           end
         end
@@ -203,7 +224,16 @@ class DwcaHunter
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
       @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm", "http://globalnames.org/terms/classificationPath"]]
       @core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm], d[:classificationPath]] }
-      @extensions = []
+      @extensions << [[
+        "http://rs.tdwg.org/dwc/terms/TaxonID",
+        "http://rs.tdwg.org/dwc/terms/vernacularName",
+        "http://purl.org/dc/terms/language"
+      ]]
+      @data.each do |d|
+        d[:vernacularNames].each do |vn|
+          @extensions[-1] << [d[:taxonId], vn[:name], vn[:language]]
+        end
+      end
       @eml = {
         :id => @uuid,
         :title => @title,
