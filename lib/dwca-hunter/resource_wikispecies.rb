@@ -11,6 +11,7 @@ class DwcaHunter
       @data = []
       @templates = {}
       @tree = {}
+      @paths = {}
       @re = {
         :page_start => /^\s*\<page\>\s*$/,
         :title => /\<title\>(.*)\<\/title\>/,
@@ -32,6 +33,8 @@ class DwcaHunter
       enrich_data
       extend_classification
       generate_dwca
+      require 'ruby-debug'; debugger
+      puts ''
     end
 
   private
@@ -76,12 +79,28 @@ class DwcaHunter
             if parent
               d[:classificationPath].unshift(parent[:parentName])
             else
+              update_tree(d[:classificationPath])
               break
             end
           end
         end
         d[:classificationPath] = d[:classificationPath].join("|").gsub("Main Page", "Life")
         DwcaHunter::logger_write(self.object_id, "Extended %s classifications" % i) if i % BATCH_SIZE == 0 && i > 0
+      end
+    end
+
+    def update_tree(path)
+      path = path.dup
+      return if @paths.has_key?(path.join("|"))
+      path.reverse!
+      (0...path.size).each do |i|
+        subpath = path[0..i]
+        subpath_string = subpath.join("|")
+        next if @paths.has_key?(subpath_string)
+        name = subpath.pop
+        tree_element = subpath.inject(@tree) { |n, res| res[n] }
+        tree_element.merge!({name => {}})
+        @paths[subpath_string] = 1
       end
     end
 

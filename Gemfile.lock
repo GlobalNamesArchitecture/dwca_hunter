@@ -1,7 +1,12 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    anystyle-parser (0.0.9)
+      bibtex-ruby (~> 1.3)
+      wapiti (~> 0.0)
     archive-tar-minitar (0.5.2)
+    bibtex-ruby (1.3.12)
+      latex-decode (>= 0.0.3)
     biodiversity19 (1.0.9)
       parallel
       parallel
@@ -28,6 +33,8 @@ GEM
       git (>= 1.2.5)
       rake
     json (1.6.3)
+    latex-decode (0.0.10)
+      unicode (~> 0.4)
     linecache19 (0.5.12)
       ruby_core_source (>= 0.1.4)
     nokogiri (1.5.0)
@@ -61,11 +68,14 @@ GEM
     treetop (1.4.10)
       polyglot
       polyglot (>= 0.3.1)
+    unicode (0.4.0)
+    wapiti (0.0.5)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  anystyle-parser
   bundler (~> 1.0.0)
   cucumber
   dwc-archive (~> 0.7.15)
