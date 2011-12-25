@@ -176,9 +176,9 @@ class DwcaHunter
         "http://purl.org/dc/terms/scientificName",
         "http://rs.tdwg.org/dwc/terms/taxonomicStatus",
         "http://purl.org/dc/terms/taxonRank"]]
-      @extensions = [[["http://rs.tdwg.org/dwc/terms/taxonID",
+      @extensions = { :data => [["http://rs.tdwg.org/dwc/terms/taxonID",
         "http://rs.tdwg.org/dwc/terms/vernacularName",
-        "http://purl.org/dc/terms/language"]]]
+        "http://purl.org/dc/terms/language"]], :file_name => "vernacular_names.txt" }
       @names.keys.each_with_index do |k, i|
         d = @names[k]
         accepted_id = @synonyms[k] ? @synonyms[k] : ''

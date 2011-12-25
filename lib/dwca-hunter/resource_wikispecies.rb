@@ -30,7 +30,6 @@ class DwcaHunter
     def make_dwca
       enrich_data
       extend_classification
-      require 'ruby-debug'; debugger
       generate_dwca
     end
 
@@ -224,14 +223,14 @@ class DwcaHunter
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
       @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm", "http://globalnames.org/terms/classificationPath"]]
       @core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm], d[:classificationPath]] }
-      @extensions << [[
+      @extensions << { data: [[
         "http://rs.tdwg.org/dwc/terms/TaxonID",
         "http://rs.tdwg.org/dwc/terms/vernacularName",
         "http://purl.org/dc/terms/language"
-      ]]
+      ]], :file_name => "vernacular_names.txt" }
       @data.each do |d|
         d[:vernacularNames].each do |vn|
-          @extensions[-1] << [d[:taxonId], vn[:name], vn[:language]]
+          @extensions[-1][:data] << [d[:taxonId], vn[:name], vn[:language]]
         end
       end
       @eml = {
