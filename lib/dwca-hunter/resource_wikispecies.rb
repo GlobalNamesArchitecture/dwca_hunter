@@ -30,7 +30,7 @@ class DwcaHunter
 
     def make_dwca
       enrich_data
-      require 'ruby-debug'; debugger
+      extend_classification
       generate_dwca
     end
 
@@ -64,11 +64,33 @@ class DwcaHunter
       f.close
     end
 
+    def extend_classification
+      DwcaHunter::logger_write(self.object_id, "Extending classifications")
+      count = @data.each_with_index do |d, i|
+        unless d[:classificationPath].empty?
+          n = 50
+          while n > 0
+            n -= 1
+            puts d[:classificationPath] if n == 0
+            parent = @templates[d[:classificationPath].first]
+            if parent
+              d[:classificationPath].unshift(parent[:parentName])
+            else
+              break
+            end
+          end
+        end
+        d[:classificationPath] = d[:classificationPath].join("|").gsub("Main Page", "Life")
+        DwcaHunter::logger_write(self.object_id, "Extended %s classifications" % i) if i % BATCH_SIZE == 0 && i > 0
+      end
+    end
+
     def process_template(x)
       name = title(x).gsub!(@re[:template], '').strip
       text = x.xpath('//text').text.strip
       parent_name = text.match(@re[:template_link])
       if parent_name
+        return if parent_name[1].match(/\#if/)
         list = parent_name[1].split("|")
         if list.size == 1
           parent_name = list[0]
@@ -85,9 +107,20 @@ class DwcaHunter
       return if title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
-        @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x)}
+        @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [] }
         if items['name'] && (name = items['name'][0])
           @data[-1][:scientificName] = parse_name(name, @data[-1])
+        end
+        if items['taxonavigation']
+          items['taxonavigation'].each do |i|
+            if link = i.match(@re[:template_link])
+              link = link[1].strip
+              if !link.match(/\|/)
+                @data[-1][:classificationPath] << link
+                break
+              end
+            end
+          end
         end
       end
     end
@@ -149,8 +182,8 @@ class DwcaHunter
 
     def generate_dwca
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
-      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm"]]
-      @core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm]] }
+      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm", "http://globalnames.org/terms/classificationPath"]]
+      @core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm], d[:classificationPath]] }
       @extensions = []
       @eml = {
         :id => @uuid,
