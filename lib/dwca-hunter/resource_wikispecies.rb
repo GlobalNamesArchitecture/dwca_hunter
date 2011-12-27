@@ -2,7 +2,7 @@
 class DwcaHunter
   class ResourceWikispecies < DwcaHunter::Resource
     def initialize(opts = {})
-      @tmp = open('tmp.csv', 'w:utf-8')
+      @problems_file = open('problems.txt', 'w:utf-8')
       @title = "Wikispecies"
       @url = "http://dumps.wikimedia.org/specieswiki/latest/specieswiki-latest-pages-articles.xml.bz2"
       @url = opts[:url] if opts[:url]
@@ -10,6 +10,7 @@ class DwcaHunter
       @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter", "wikispecies", "data.xml.bz2")
       @data = []
       @templates = {}
+      @taxon_ids = {}
       @tree = {}
       @paths = {}
       @extensions = []
@@ -65,12 +66,15 @@ class DwcaHunter
 
     def extend_classification
       DwcaHunter::logger_write(self.object_id, "Extending classifications")
-      count = @data.each_with_index do |d, i|
+      @data.each_with_index do |d, i|
         unless d[:classificationPath].empty?
           n = 50
           while n > 0
             n -= 1
-            puts d[:classificationPath] if n == 0
+            if n == 0
+              d[:classificationPath] = []
+              break
+            end
             parent = @templates[d[:classificationPath].first]
             if parent
               d[:classificationPath].unshift(parent[:parentName])
@@ -80,7 +84,7 @@ class DwcaHunter
             end
           end
         end
-        d[:classificationPath] = d[:classificationPath].join("|").gsub("Main Page", "Life")
+        # d[:classificationPath] = d[:classificationPath].join("|").gsub("Main Page", "Life")
         DwcaHunter::logger_write(self.object_id, "Extended %s classifications" % i) if i % BATCH_SIZE == 0 && i > 0
       end
     end
@@ -129,8 +133,12 @@ class DwcaHunter
     end
 
     def get_full_scientific_name(items)
-      if items['name'] && (name = items['name'][0])
-        @data[-1][:scientificName] = parse_name(name, @data[-1])
+      if items['name'] 
+        if name = items['name'][0]
+          @data[-1][:scientificName] = parse_name(name, @data[-1])
+        else
+          @problems_file.write("%s\n" % @data[-1][:canonicalForm])
+        end
       end
     end
 
@@ -218,19 +226,32 @@ class DwcaHunter
       return name_string
     end
 
-
     def generate_dwca
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
-      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://globalnames.org/terms/canonicalForm", "http://globalnames.org/terms/classificationPath"]]
-      @core += @data.map { |d| [d[:taxonId], d[:scientificName], d[:canonicalForm], d[:classificationPath]] }
+      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://rs.tdwg.org/dwc/terms/parentNameUsageID", "http://globalnames.org/terms/canonicalForm", "http://globalnames.org/terms/classificationPath"]]
+      DwcaHunter::logger_write(self.object_id, "Assembling Core Data")
+      count = 0
+      @data.map do |d| 
+        count += 1
+        DwcaHunter::logger_write(self.object_id, "Traversing %s core data record" % count) if count % BATCH_SIZE == 0
+        taxon_id = (d[:classificationPath].empty? ? d[:taxonId] : @templates[d[:classificationPath].last][:id]) rescue d[:taxonId]
+        @taxon_ids[d[:taxonId]] = taxon_id
+        parentNameUsageId = (d[:classificationPath].size > 1 ? @templates[d[:classificationPath][-2]][:id] : nil) rescue nil
+        @core << [taxon_id, d[:scientificName], parentNameUsageId, d[:canonicalForm], d[:classificationPath].join("|")]
+      end
       @extensions << { data: [[
         "http://rs.tdwg.org/dwc/terms/TaxonID",
         "http://rs.tdwg.org/dwc/terms/vernacularName",
         "http://purl.org/dc/terms/language"
       ]], :file_name => "vernacular_names.txt" }
+      DwcaHunter::logger_write(self.object_id, "Creating verncaular name extension for DarwinCore Archive file")
+      count = 0
       @data.each do |d|
+        count += 1
+        DwcaHunter::logger_write(self.object_id, "Traversing %s extension data record" % count) if count % BATCH_SIZE == 0
         d[:vernacularNames].each do |vn|
-          @extensions[-1][:data] << [d[:taxonId], vn[:name], vn[:language]]
+          taxon_id = @taxon_ids[d[:taxonId]] ? @taxon_ids[d[:taxonId]] : nil
+          @extensions[-1][:data] << [taxon_id, vn[:name], vn[:language]] if taxon_id
         end
       end
       @eml = {
@@ -251,6 +272,7 @@ class DwcaHunter
       }
       super
     end
+
   end
 end
 
