@@ -4,7 +4,8 @@ source "http://rubygems.org"
 #   gem "activesupport", ">= 2.3.5"
 gem "nokogiri", "~> 1.5.0"
 gem "dwc-archive", "~> 0.7.15"
-gem "anystyle-parser"
+gem "rest-client"
+# gem "anystyle-parser"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
