@@ -3,7 +3,7 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 gem "nokogiri", "~> 1.5.0"
-gem "dwc-archive", "~> 0.7.15"
+gem "dwc-archive", "~> 0.7.16"
 gem "rest-client"
 # gem "anystyle-parser"
 
