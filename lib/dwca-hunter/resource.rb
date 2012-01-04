@@ -36,6 +36,12 @@ class DwcaHunter
     end
 
     private
+    
+    def cleanup(str)
+      str.strip!
+      str.to_i.to_s == str ? str.to_i : str
+    end
+
     def prepare_path
       FileUtils.rm_rf(@download_dir)
       FileUtils.mkdir_p(@download_dir)

@@ -10,6 +10,7 @@ require 'rest_client'
 Dir[File.join(File.dirname(__FILE__), "dwca-hunter", "*.rb")].each {|f| require f}
 
 class DwcaHunter
+  attr_reader :resource
 
   VERSION = open(File.join(File.dirname(__FILE__), '..', 'VERSION')).readline.strip
   DEFAULT_TMP_DIR = "/tmp"

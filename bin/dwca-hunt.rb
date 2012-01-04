@@ -2,12 +2,13 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'dwca-hunter'
 opts = { download: false, unpack: false }
-opts = {}
+# opts = {}
 DwcaHunter::logger = Logger.new($stdout)
 resources = [
   # DwcaHunter::ResourceWikispecies.new(opts), 
-  DwcaHunter::ResourceFreebase.new(opts),
+  # DwcaHunter::ResourceFreebase.new(opts),
   # DwcaHunter::ResourceITIS.new(opts),
+  DwcaHunter::ResourceNCBI.new(opts),
 ]
 resources.each do |r|
   dh = DwcaHunter.new(r)
