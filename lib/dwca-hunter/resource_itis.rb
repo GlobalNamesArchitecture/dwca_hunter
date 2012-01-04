@@ -14,6 +14,7 @@ class DwcaHunter
       @synonyms = {}
       @synonym_of = {}
       @names = {}
+      @extensions = []
       super(opts)
       @itis_dir = File.join(@download_dir, 'itis')
     end
@@ -176,19 +177,20 @@ class DwcaHunter
         "http://purl.org/dc/terms/scientificName",
         "http://rs.tdwg.org/dwc/terms/taxonomicStatus",
         "http://purl.org/dc/terms/taxonRank"]]
-      @extensions = { :data => [["http://rs.tdwg.org/dwc/terms/taxonID",
+      @extensions << { :data => [["http://rs.tdwg.org/dwc/terms/taxonID",
         "http://rs.tdwg.org/dwc/terms/vernacularName",
         "http://purl.org/dc/terms/language"]], :file_name => "vernacular_names.txt" }
       @names.keys.each_with_index do |k, i|
         d = @names[k]
-        accepted_id = @synonyms[k] ? @synonyms[k] : ''
-        row = [k, d[:parent_tsn], accepted_id, d[:name], d[:status], d[:rank]]
+        accepted_id = @synonyms[k] ? @synonyms[k] : nil
+        parent_id = d[:parent_tsn].to_i == 0 ? nil : d[:parent_tsn]
+        row = [k, parent_id, accepted_id, d[:name], d[:status], d[:rank]]
         @core << row
       end
 
       @vernaculars.keys.each_with_index do |k, i|
         d = @vernaculars[k]
-        @extensions[0] << [k, d[:name], d[:language]]
+        @extensions[0][:data] << [k, d[:name], d[:language]]
       end
 
       @eml = {
