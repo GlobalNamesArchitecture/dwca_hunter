@@ -123,9 +123,11 @@ class DwcaHunter
       @data.each do |d|
         count += 1
         DwcaHunter::logger_write(self.object_id, "Traversing %s extension data record" % count) if count % BATCH_SIZE == 0
+        
         d[:vernacularNames].each do |vn|
           @extensions[0][:data] << [d[:id], vn]
         end
+
         d[:synonyms].each do |synonym|
           @extensions[1][:data] << [d[:id], synonym[:scientificName], synonym[:taxonomicStatus]]
         end
