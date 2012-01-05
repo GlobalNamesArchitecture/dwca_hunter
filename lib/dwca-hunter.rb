@@ -7,6 +7,8 @@ require 'dwc-archive'
 require 'dwca-hunter/resource'
 require 'iconv'
 require 'rest_client'
+require 'base64'
+require File.join(File.dirname(__FILE__), "uuid")
 Dir[File.join(File.dirname(__FILE__), "dwca-hunter", "*.rb")].each {|f| require f}
 
 class DwcaHunter
@@ -15,6 +17,7 @@ class DwcaHunter
   VERSION = open(File.join(File.dirname(__FILE__), '..', 'VERSION')).readline.strip
   DEFAULT_TMP_DIR = "/tmp"
   BATCH_SIZE = 10_000
+  GNA_NAMESPACE = UUID.create_v5("globalnames.org", UUID::NameSpace_DNS)
 
   def self.logger
     @@logger ||= Logger.new(nil)
