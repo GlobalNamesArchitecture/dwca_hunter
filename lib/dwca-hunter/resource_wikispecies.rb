@@ -128,6 +128,7 @@ class DwcaHunter
         @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
         get_full_scientific_name(items)
         get_vernacular_names(items)
+        require 'ruby-debug'; debugger if title(x).match /Aerides lawrenciae/
         init_classification_path(items)
       end
     end
@@ -160,11 +161,12 @@ class DwcaHunter
 
     def init_classification_path(items)
       if items['taxonavigation']
-        items['taxonavigation'].each do |i|
-          if link = i.match(@re[:template_link])
-            link = link[1].strip
-            if !link.match(/\|/)
-              @data[-1][:classificationPath] << link
+        items['taxonavigation'].each do |line|
+          line.gsub!(/\[\[.*\]\]/, '') # ignore non-template links
+          if template_link = line.match(@re[:template_link])
+            template_link = template_link[1].strip.gsub(/Template:/, '')
+            if !template_link.match(/\|/)
+              @data[-1][:classificationPath] << template_link
               break
             end
           end
@@ -228,7 +230,7 @@ class DwcaHunter
 
     def generate_dwca
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
-      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://rs.tdwg.org/dwc/terms/parentNameUsageID", "http://globalnames.org/terms/canonicalForm", "http://globalnames.org/terms/classificationPath"]]
+      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://rs.tdwg.org/dwc/terms/parentNameUsageID", "http://globalnames.org/terms/canonicalForm", "http://rs.tdwg.org/dwc/terms/higherClassification", "http://purl.org/dc/terms/source"]]
       DwcaHunter::logger_write(self.object_id, "Assembling Core Data")
       count = 0
       @data.map do |d| 
@@ -237,7 +239,12 @@ class DwcaHunter
         taxon_id = (d[:classificationPath].empty? ? d[:taxonId] : @templates[d[:classificationPath].last][:id]) rescue d[:taxonId]
         @taxon_ids[d[:taxonId]] = taxon_id
         parentNameUsageId = (d[:classificationPath].size > 1 ? @templates[d[:classificationPath][-2]][:id] : nil) rescue nil
-        @core << [taxon_id, d[:scientificName], parentNameUsageId, d[:canonicalForm], d[:classificationPath].join("|")]
+        url = "http://species.wikimedia.org/wiki/" + URI.encode(d[:canonicalForm].gsub(' ', '_'))
+        path = d[:classificationPath]
+        path.pop if path[-1] == d[:canonicalForm]
+        canonical_form = d[:canonicalForm].gsub(/\(.*\)\s*$/, '').strip
+        scientific_name = (d[:scientificName] == d[:canonicalForm]) ? canonical_form : d[:scientificName]
+        @core << [taxon_id, scientific_name, parentNameUsageId, canonical_form, path.join("|"), url]
       end
       @extensions << { data: [[
         "http://rs.tdwg.org/dwc/terms/TaxonID",
