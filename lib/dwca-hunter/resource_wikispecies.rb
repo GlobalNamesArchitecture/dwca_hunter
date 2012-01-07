@@ -56,7 +56,8 @@ class DwcaHunter
             page_num += 1
             DwcaHunter::logger_write(self.object_id, "Traversed %s pages" % page_num) if page_num % BATCH_SIZE == 0
             page = ""
-            @title = nil
+            @page_title = nil
+            @page_id = nil
           end
         end
       end
@@ -118,17 +119,18 @@ class DwcaHunter
           parent_name = list[0]
         end
       end
-      @templates[name] = { parentName: parent_name, id: x.xpath('//id').text }
+      name.gsub!(/_/, ' ')
+      parent_name.gsub!(/_/, ' ') if parent_name
+      @templates[name] = { parentName: parent_name, id: id(x) }
     end
 
     def process_species(x)
       return if title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
-        @data << { :taxonId => x.xpath('//id').text, :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
+        @data << { :taxonId => id(x), :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
         get_full_scientific_name(items)
         get_vernacular_names(items)
-        require 'ruby-debug'; debugger if title(x).match /Aerides lawrenciae/
         init_classification_path(items)
       end
     end
@@ -164,7 +166,7 @@ class DwcaHunter
         items['taxonavigation'].each do |line|
           line.gsub!(/\[\[.*\]\]/, '') # ignore non-template links
           if template_link = line.match(@re[:template_link])
-            template_link = template_link[1].strip.gsub(/Template:/, '')
+            template_link = template_link[1].strip.gsub(/Template:/, '').gsub(/_/, ' ')
             if !template_link.match(/\|/)
               @data[-1][:classificationPath] << template_link
               break
@@ -197,7 +199,11 @@ class DwcaHunter
     end
 
     def title(x)
-      @title ||= x.xpath('//title').text
+      @page_title ||= x.xpath('//title').text
+    end
+
+    def id(x)
+      @page_id ||= x.xpath('//id').text
     end
 
     def template?(page_xml)
