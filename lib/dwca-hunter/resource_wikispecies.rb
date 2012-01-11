@@ -121,14 +121,14 @@ class DwcaHunter
       end
       name.gsub!(/_/, ' ')
       parent_name.gsub!(/_/, ' ') if parent_name
-      @templates[name] = { parentName: parent_name, id: id(x) }
+      @templates[name] = { parentName: parent_name, id: page_id(x) }
     end
 
     def process_species(x)
       return if title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
-        @data << { :taxonId => id(x), :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
+        @data << { :taxonId => page_id(x), :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
         get_full_scientific_name(items)
         get_vernacular_names(items)
         init_classification_path(items)
@@ -199,11 +199,11 @@ class DwcaHunter
     end
 
     def title(x)
-      @page_title ||= x.xpath('//title').text
+      @page_title ||= x.xpath('//title').first.text
     end
 
-    def id(x)
-      @page_id ||= x.xpath('//id').text
+    def page_id(x)
+      @page_id ||= x.xpath('//id').first.text
     end
 
     def template?(page_xml)

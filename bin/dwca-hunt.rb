@@ -6,10 +6,10 @@ opts = { download: false, unpack: false }
 DwcaHunter::logger = Logger.new($stdout)
 resources = [
   DwcaHunter::ResourceWikispecies.new(opts), 
-  # DwcaHunter::ResourceFreebase.new(opts),
-  # DwcaHunter::ResourceITIS.new(opts),
-  # DwcaHunter::ResourceNCBI.new(opts),
-  # DwcaHunter::ResourceWoRMS.new(opts)
+  DwcaHunter::ResourceFreebase.new(opts),
+  DwcaHunter::ResourceITIS.new(opts),
+  DwcaHunter::ResourceNCBI.new(opts),
+  DwcaHunter::ResourceWoRMS.new(opts)
 ]
 resources.each do |r|
   dh = DwcaHunter.new(r)
