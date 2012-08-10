@@ -173,14 +173,14 @@ class DwcaHunter
     def generate_dwca
       DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
       @core = [["http://rs.tdwg.org/dwc/terms/taxonID",
-        "http://purl.org/dc/terms/parentNameUsageID",
+        "http://rs.tdwg.org/dwc/terms/parentNameUsageID",
         "http://rs.tdwg.org/dwc/terms/acceptedNameUsageID",
-        "http://purl.org/dc/terms/scientificName",
+        "http://rs.tdwg.org/dwc/terms/scientificName",
         "http://rs.tdwg.org/dwc/terms/taxonomicStatus",
-        "http://purl.org/dc/terms/taxonRank"]]
+        "http://rs.tdwg.org/dwc/terms/taxonRank"]]
       @extensions << { :data => [["http://rs.tdwg.org/dwc/terms/taxonID",
         "http://rs.tdwg.org/dwc/terms/vernacularName",
-        "http://purl.org/dc/terms/language"]], :file_name => "vernacular_names.txt" }
+        "http://purl.org/dc/terms/language"]], :file_name => "vernacular_names.txt", :row_type => "http://rs.gbif.org/terms/1.0/VernacularName" }
       @names.keys.each_with_index do |k, i|
         d = @names[k]
         accepted_id = @synonyms[k] ? @synonyms[k] : nil

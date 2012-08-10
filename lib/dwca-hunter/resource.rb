@@ -69,7 +69,7 @@ class DwcaHunter
       gen = DarwinCore::Generator.new(File.join(@download_dir, "dwca.tar.gz"))
       gen.add_core(@core, 'taxa.txt')
       @extensions.each_with_index do |extension, i|
-        gen.add_extension(extension[:data], extension[:file_name])
+        gen.add_extension(extension[:data], extension[:file_name], true, extension[:row_type])
       end
       gen.add_meta_xml
       gen.add_eml_xml(@eml)

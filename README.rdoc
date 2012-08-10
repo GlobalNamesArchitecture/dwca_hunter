@@ -1,6 +1,16 @@
 = dwca-hunter
 
-Description goes here.
+DarwinCoreArchive Hunter is an application designed for reformatting publicly accessable scientific name sources into Dawrin Core Archive format (http://code.google.com/p/gbif-ecat/wiki/DwCArchive)
+
+Currently we have DWCA generators for
+
+NCBI
+ITIS
+Wikispecies
+WoRMS
+Freebase
+
+See dwca-hunter/bin/dwca-hunt.rb as a example how to use the code.
 
 == Contributing to dwca-hunter
  

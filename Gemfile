@@ -3,7 +3,7 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 gem "nokogiri", "~> 1.5.0"
-gem "dwc-archive", "~> 0.7.16"
+gem "dwc-archive", "~> 0.9.2"
 gem "rest-client"
 # gem "anystyle-parser"
 
@@ -12,8 +12,8 @@ gem "rest-client"
 group :development do
   gem "rspec", "~> 2.3.0"
   gem "cucumber", ">= 0"
-  gem "bundler", "~> 1.0.0"
+  gem "bundler", "~> 1.1.5"
   gem "jeweler", "~> 1.6.4"
-  gem "rcov", ">= 0"
-  gem "ruby-debug19"
+  gem "simplecov", ">= 0"
+  gem "debugger"
 end
