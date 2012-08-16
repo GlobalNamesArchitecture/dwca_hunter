@@ -5,7 +5,6 @@ require 'net/http'
 require 'json'
 require 'dwc-archive'
 require 'dwca-hunter/resource'
-require 'iconv'
 require 'rest_client'
 require 'base64'
 require File.join(File.dirname(__FILE__), "uuid")

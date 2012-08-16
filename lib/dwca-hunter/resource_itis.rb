@@ -6,7 +6,6 @@ class DwcaHunter
       @url = "http://www.itis.gov/downloads/itisMySQLTables.tar.gz"
       @uuid =  "5d066e84-e512-4a2f-875c-0a605d3d9f35"
       @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter", "itis", "data.tar.gz")
-      @conv = Iconv.new('UTF-8', 'ISO-8859-1')
       @ranks = {} 
       @kingdoms = {}
       @authors = {}
@@ -47,7 +46,7 @@ class DwcaHunter
       rank_file = File.join(@itis_dir, 'taxon_unit_types')
       f = open(rank_file, "r:utf-8")
       f.each do |l|
-        l = @conv.iconv(l)
+        l.encode!('UTF-8', 'ISO-8859-1', :invalid => :replace, :replace => '?')
         row = l.strip.split("|")
         @ranks[row[1].strip] = row[2].strip
       end
@@ -73,7 +72,7 @@ class DwcaHunter
 
       f = open(File.join(@itis_dir, 'taxon_authors_lkp'))
       f.each do |l|
-        l = @conv.iconv(l)
+        l.encode!('UTF-8', 'ISO-8859-1', :invalid => :replace, :replace => '?')
         data = l.strip.split("|")
         @authors[data[0].strip] = data[1].strip
       end
@@ -90,7 +89,7 @@ class DwcaHunter
       f = open(File.join(@itis_dir, 'vernaculars'))
       f.each_with_index do |l, i|
         DwcaHunter::logger_write(self.object_id, "Extracted %s vernacular names" % i) if i % BATCH_SIZE == 0
-        l = @conv.iconv(l)
+        l.encode!('UTF-8', 'ISO-8859-1', :invalid => :replace, :replace => '?')
         data = l.split("|").map { |d| d.strip }
         name_tsn = data[0]
         string   = data[1]
@@ -108,7 +107,7 @@ class DwcaHunter
       f = open(File.join(@itis_dir, 'synonym_links'))
       f.each_with_index do |l, i|
         DwcaHunter::logger_write(self.object_id, "Extracted %s synonyms" % i) if i % BATCH_SIZE == 0
-        l = @conv.iconv(l)
+        l.encode!('UTF-8', 'ISO-8859-1', :invalid => :replace, :replace => '?')
         data = l.split("|").map { |d| d.strip }
         synonym_name_tsn = data[0]
         accepted_name_tsn = data[1]
@@ -145,7 +144,7 @@ class DwcaHunter
       f = open(File.join(@itis_dir, 'taxonomic_units'))
       f.each_with_index do |l, i|
         DwcaHunter::logger_write(self.object_id, "Extracted %s names" % i) if i % BATCH_SIZE == 0
-        l = @conv.iconv(l)
+        l.encode!('UTF-8', 'ISO-8859-1', :invalid => :replace, :replace => '?')
         data = l.split("|").map { |d| d.strip }
         name_tsn   = data[0]
         x1         = data[1]
