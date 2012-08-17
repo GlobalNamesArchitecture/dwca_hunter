@@ -1,4 +1,4 @@
-= dwca-hunter
+= dwca-hunter {<img src="https://codeclimate.com/badge.png" />}[https://codeclimate.com/github/GlobalNamesArchitecture/dwca-hunter]
 
 DarwinCoreArchive Hunter is an application designed for reformatting publicly accessable scientific name sources into Dawrin Core Archive format (http://code.google.com/p/gbif-ecat/wiki/DwCArchive)
 
