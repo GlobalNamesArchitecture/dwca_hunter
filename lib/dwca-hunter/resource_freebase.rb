@@ -31,11 +31,6 @@ class DwcaHunter
           name: nil,
           scientific_name: nil,
           synonym_scientific_name: [],
-          # key: {
-          #   namespace: "/wikipedia/en_id",
-          #   value: nil,
-          #   optional: true,
-          # },
           higher_classification: { 
             id: nil,
             guid: nil,
@@ -45,6 +40,18 @@ class DwcaHunter
         }],
         cursor: true,
       }
+
+      run_query(q)
+
+      data = JSON.pretty_generate @data
+      f = open(@download_path, "w:utf-8")
+      f.write(data)
+      f.close
+    end
+
+    private
+
+    def run_query(q)
       count = 0
       requests_num = 0
       while true
@@ -56,14 +63,7 @@ class DwcaHunter
         res["result"].each { |d| @data << d }
         q[:cursor] = res["cursor"]
       end
-
-      data = JSON.pretty_generate @data
-      f = open(@download_path, "w:utf-8")
-      f.write(data)
-      f.close
     end
-
-    private
 
     def organize_data
       @data = JSON.load(open(@download_path, "r:utf-8").read)
