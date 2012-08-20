@@ -51,7 +51,7 @@ class DwcaHunter
       f.each do |l|
         l.encode!('UTF-8', 'ISO-8859-1', :invalid => :replace, :replace => '?')
         row = l.strip.split("|")
-        @ranks[row[1].strip] = row[2].strip
+        @ranks[row[0].strip + '/' + row[1].strip] = row[2].strip
       end
     end
 
@@ -161,13 +161,14 @@ class DwcaHunter
         status     = data[10]
         parent_tsn = data[17]
         author_id  = data[18]
+        kingdom_id = data[20]
         rank_id    = data[21]
 
         parent_tsn = nil if parent_tsn == ''
         name = [x1, name_part1, x2, name_part2, sp_marker1, name_part3, sp_marker2, name_part4]
         name << @authors[author_id] if @authors[author_id] 
         name = name.join(' ').strip.gsub(/\s+/, ' ')
-        rank = @ranks[rank_id] ? @ranks[rank_id] : ''
+        rank = @ranks[kingdom_id + '/' + rank_id] ? @ranks[kingdom_id + '/' + rank_id] : ''
         @names[name_tsn] = { name:name, status:status, parent_tsn:parent_tsn, rank:rank } 
       end
     end
