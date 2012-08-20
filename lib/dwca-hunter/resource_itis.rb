@@ -22,6 +22,9 @@ class DwcaHunter
       unpack_tar
       dir = Dir.entries(@download_dir).select {|e| e.match /itisMySQL/}[0]
       FileUtils.mv(File.join(@download_dir, dir), @itis_dir)
+      
+      # Create a file with the same name as the directory we extracted.
+      FileUtils.touch(File.join(@itis_dir, "version_" + dir))
     end
 
     def make_dwca
