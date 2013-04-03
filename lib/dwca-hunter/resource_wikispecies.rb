@@ -3,11 +3,15 @@ class DwcaHunter
   class ResourceWikispecies < DwcaHunter::Resource
     def initialize(opts = {})
       @problems_file = open('problems.txt', 'w:utf-8')
-      @title = "Wikispecies"
-      @url = "http://dumps.wikimedia.org/specieswiki/latest/specieswiki-latest-pages-articles.xml.bz2"
+      @title = 'Wikispecies'
+      @url = 'http://dumps.wikimedia.org/specieswiki/latest/' + 
+             'specieswiki-latest-pages-articles.xml.bz2'
       @url = opts[:url] if opts[:url]
-      @uuid = "68923690-0727-473c-b7c5-2ae9e601e3fd"
-      @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter", "wikispecies", "data.xml.bz2")
+      @uuid = '68923690-0727-473c-b7c5-2ae9e601e3fd'
+      @download_path = File.join(DEFAULT_TMP_DIR, 
+                                 'dwca_hunter', 
+                                 'wikispecies', 
+                                 'data.xml.bz2')
       @data = []
       @templates = {}
       @taxon_ids = {}
@@ -15,11 +19,11 @@ class DwcaHunter
       @paths = {}
       @extensions = []
       @re = {
-        :page_start => /^\s*\<page\>\s*$/,
-        :page_end => /^\s*\<\/page\>\s*$/,
-        :template => /Template:/i,
-        :template_link => /\{\{([^\}]*)\}\}/,
-        :vernacular_names => /\{\{\s*VN\s*\|([^\}]+)\}\}/i
+        page_start: /^\s*\<page\>\s*$/,
+        page_end: /^\s*\<\/page\>\s*$/,
+        template: /Template:/i,
+        template_link: /\{\{([^\}]*)\}\}/,
+        vernacular_names: /\{\{\s*VN\s*\|([^\}]+)\}\}/i
       }
       super(opts)
     end
@@ -37,11 +41,12 @@ class DwcaHunter
   private
 
     def enrich_data
-      DwcaHunter::logger_write(self.object_id, "Extracting data from xml file...")
+      DwcaHunter::logger_write(self.object_id, 
+                               'Extracting data from xml file...')
       Dir.chdir(@download_dir)
       f = open('data.xml', 'r:utf-8')
       page_on = false
-      page = ""
+      page = '' 
       page_num = 0
       f.each do |l|
         if l.match(@re[:page_start])
@@ -52,21 +57,27 @@ class DwcaHunter
           if l.match(@re[:page_end])
             page_on = false
             page_xml = Nokogiri::XML.parse(page)
-            template?(page_xml) ? process_template(page_xml) : process_species(page_xml)
+            template?(page_xml) ? 
+              process_template(page_xml) : 
+              process_species(page_xml)
             page_num += 1
-            DwcaHunter::logger_write(self.object_id, "Traversed %s pages" % page_num) if page_num % BATCH_SIZE == 0
-            page = ""
+            if page_num % BATCH_SIZE == 0
+              DwcaHunter::logger_write(self.object_id, 
+                                       "Traversed %s pages" % page_num) 
+            end
+            page = '' 
             @page_title = nil
             @page_id = nil
           end
         end
       end
-      DwcaHunter::logger_write(self.object_id, "Extracted total %s pages" % page_num)
+      DwcaHunter::logger_write(self.object_id, 
+                               'Extracted total %s pages' % page_num)
       f.close
     end
 
     def extend_classification
-      DwcaHunter::logger_write(self.object_id, "Extending classifications")
+      DwcaHunter::logger_write(self.object_id, 'Extending classifications')
       @data.each_with_index do |d, i|
         unless d[:classificationPath].empty?
           n = 50
@@ -85,17 +96,21 @@ class DwcaHunter
             end
           end
         end
-        # d[:classificationPath] = d[:classificationPath].join("|").gsub("Main Page", "Life")
-        DwcaHunter::logger_write(self.object_id, "Extended %s classifications" % i) if i % BATCH_SIZE == 0 && i > 0
+        # d[:classificationPath] = d[:classificationPath].join("|").
+        # gsub("Main Page", "Life")
+        if i % BATCH_SIZE == 0 && i > 0
+          DwcaHunter::logger_write(self.object_id, 
+                                   "Extended %s classifications" % i) 
+        end
       end
     end
 
     def update_tree(path)
       path = path.dup
-      return if @paths.has_key?(path.join("|"))
+      return if @paths.has_key?(path.join('|'))
       (0...path.size).each do |i|
         subpath = path[0..i]
-        subpath_string = subpath.join("|")
+        subpath_string = subpath.join('|')
         next if @paths.has_key?(subpath_string)
         name = subpath.pop
         tree_element = subpath.inject(@tree) { |res, n| res[n] }
@@ -128,7 +143,12 @@ class DwcaHunter
       return if title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
-        @data << { :taxonId => page_id(x), :canonicalForm => title(x), :scientificName => title(x), :classificationPath => [], :vernacularNames => [] }
+        @data << { 
+          taxonId: page_id(x), 
+          canonicalForm: title(x), 
+          scientificName: title(x), 
+          classificationPath: [], 
+          vernacularNames: [] }
         get_full_scientific_name(items)
         get_vernacular_names(items)
         init_classification_path(items)
@@ -154,8 +174,13 @@ class DwcaHunter
           vnames = []
           vn_list.each do |item|
             language, name = item.split("=").map { |x| x.strip }
-            vnames << { name: name, language: language } if language && name && language.size < 4 && name.valid_encoding?
+            if language && name && language.size < 4 && name.valid_encoding?
+              vnames << { 
+                name: name, 
+                language: language } 
+            end
           end
+
           @data[-1][:vernacularNames] = vnames
         end
       end
@@ -166,7 +191,8 @@ class DwcaHunter
         items['taxonavigation'].each do |line|
           line.gsub!(/\[\[.*\]\]/, '') # ignore non-template links
           if template_link = line.match(@re[:template_link])
-            template_link = template_link[1].strip.gsub(/Template:/, '').gsub(/_/, ' ')
+            template_link = template_link[1].
+              strip.gsub(/Template:/, '').gsub(/_/, ' ')
             if !template_link.match(/\|/)
               @data[-1][:classificationPath] << template_link
               break
@@ -178,7 +204,9 @@ class DwcaHunter
 
     def find_species_components(x)
       items = get_items(x.xpath('//text').text)
-      return nil unless items.has_key?('name') || items.has_key?('taxonavigation')
+      is_taxon_item = items.has_key?('name') || 
+                      items.has_key?('taxonavigation')
+      return nil unless is_taxon_item
       items
     end
 
@@ -235,53 +263,83 @@ class DwcaHunter
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id, "Creating DarwinCore Archive file")
-      @core = [["http://rs.tdwg.org/dwc/terms/taxonID", "http://rs.tdwg.org/dwc/terms/scientificName", "http://rs.tdwg.org/dwc/terms/parentNameUsageID", "http://globalnames.org/terms/canonicalForm", "http://rs.tdwg.org/dwc/terms/higherClassification", "http://purl.org/dc/terms/source"]]
-      DwcaHunter::logger_write(self.object_id, "Assembling Core Data")
+      DwcaHunter::logger_write(self.object_id, 
+                               'Creating DarwinCore Archive file')
+      @core = [
+        ['http://rs.tdwg.org/dwc/terms/taxonID', 
+         'http://rs.tdwg.org/dwc/terms/scientificName', 
+         'http://rs.tdwg.org/dwc/terms/parentNameUsageID', 
+         'http://globalnames.org/terms/canonicalForm', 
+         'http://rs.tdwg.org/dwc/terms/higherClassification', 
+         'http://purl.org/dc/terms/source']
+      ]
+      DwcaHunter::logger_write(self.object_id, 'Assembling Core Data')
       count = 0
       @data.map do |d| 
         count += 1
-        DwcaHunter::logger_write(self.object_id, "Traversing %s core data record" % count) if count % BATCH_SIZE == 0
-        taxon_id = (d[:classificationPath].empty? ? d[:taxonId] : @templates[d[:classificationPath].last][:id]) rescue d[:taxonId]
+        if count % BATCH_SIZE == 0
+          DwcaHunter::logger_write(self.object_id, 
+                                   "Traversing %s core data record" % count) 
+        end
+        taxon_id = (d[:classificationPath].empty? ? 
+                    d[:taxonId] : 
+                    @templates[d[:classificationPath].
+                      last][:id]) rescue d[:taxonId]
         @taxon_ids[d[:taxonId]] = taxon_id
-        parentNameUsageId = (d[:classificationPath].size > 1 ? @templates[d[:classificationPath][-2]][:id] : nil) rescue nil
-        url = "http://species.wikimedia.org/wiki/" + URI.encode(d[:canonicalForm].gsub(' ', '_'))
+        parentNameUsageId = (d[:classificationPath].size > 1 ? 
+                             @templates[d[:classificationPath][-2]][:id] : 
+                             nil) rescue nil
+        url = 'http://species.wikimedia.org/wiki/' + 
+          URI.encode(d[:canonicalForm].gsub(' ', '_'))
         path = d[:classificationPath]
         path.pop if path[-1] == d[:canonicalForm]
         canonical_form = d[:canonicalForm].gsub(/\(.*\)\s*$/, '').strip
-        scientific_name = (d[:scientificName] == d[:canonicalForm]) ? canonical_form : d[:scientificName]
-        @core << [taxon_id, scientific_name, parentNameUsageId, canonical_form, path.join("|"), url]
+        scientific_name = (d[:scientificName] == d[:canonicalForm]) ? 
+                           canonical_form : 
+                           d[:scientificName]
+        @core << [taxon_id, 
+                  scientific_name, 
+                  parentNameUsageId, 
+                  canonical_form, 
+                  path.join('|'), 
+                  url]
       end
       @extensions << { data: [[
-        "http://rs.tdwg.org/dwc/terms/TaxonID",
-        "http://rs.tdwg.org/dwc/terms/vernacularName",
-        "http://purl.org/dc/terms/language"
-      ]], :file_name => "vernacular_names.txt" }
-      DwcaHunter::logger_write(self.object_id, "Creating verncaular name extension for DarwinCore Archive file")
+        'http://rs.tdwg.org/dwc/terms/TaxonID',
+        'http://rs.tdwg.org/dwc/terms/vernacularName',
+        'http://purl.org/dc/terms/language'
+      ]], file_name: 'vernacular_names.txt' }
+      DwcaHunter::logger_write(self.object_id, 
+              'Creating verncaular name extension for DarwinCore Archive file')
       count = 0
       @data.each do |d|
         count += 1
-        DwcaHunter::logger_write(self.object_id, "Traversing %s extension data record" % count) if count % BATCH_SIZE == 0
+        if count % BATCH_SIZE == 0
+          DwcaHunter::logger_write(self.object_id, 
+                                 "Traversing %s extension data record" % count) 
+        end
         d[:vernacularNames].each do |vn|
           taxon_id = @taxon_ids[d[:taxonId]] ? @taxon_ids[d[:taxonId]] : nil
-          @extensions[-1][:data] << [taxon_id, vn[:name], vn[:language]] if taxon_id
+          if taxon_id
+            @extensions[-1][:data] << [taxon_id, vn[:name], vn[:language]]
+          end
         end
       end
       @eml = {
-        :id => @uuid,
-        :title => @title,
-        :license => 'http://creativecommons.org/licenses/by-sa/3.0/',
-        :authors => [
-          { :first_name => 'Stephen',
-            :last_name => 'Thorpe',
-            :email => 'stephen_thorpe@yahoo.co.nz', 
-            :url => "http://species.wikimedia.org/wiki/Main_Page" }],
-        :abstract => 'The free species directory that anyone can edit.',
-        :metadata_providers => [
-          { :first_name => 'Dmitry',
-            :last_name => 'Mozzherin',
-            :email => 'dmozzherin@mbl.edu' }],
-        :url => 'http://species.wikimedia.org/wiki/Main_Page'
+        id: @uuid,
+        title: @title,
+        license: 'http://creativecommons.org/licenses/by-sa/3.0/',
+        authors: [
+          { first_name: 'Stephen',
+            last_name: 'Thorpe',
+            email: 'stephen_thorpe@yahoo.co.nz', 
+            url: 'http://species.wikimedia.org/wiki/Main_Page' }],
+        abstract: 'The free species directory that anyone can edit.',
+        metadata_providers: [
+          { first_name: 'Dmitry',
+            last_name: 'Mozzherin',
+            email: 'dmozzherin@mbl.edu' }],
+        url: 'http://species.wikimedia.org/wiki/Main_Page'
       }
       super
     end

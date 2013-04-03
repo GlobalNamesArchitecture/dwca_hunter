@@ -8,12 +8,15 @@ require 'dwca-hunter/resource'
 require 'rest_client'
 require 'base64'
 require File.join(File.dirname(__FILE__), "uuid")
-Dir[File.join(File.dirname(__FILE__), "dwca-hunter", "*.rb")].each {|f| require f}
+
+Dir[File.join(File.dirname(__FILE__), "dwca-hunter", "*.rb")].
+  each {|f| require f}
 
 class DwcaHunter
   attr_reader :resource
 
-  VERSION = open(File.join(File.dirname(__FILE__), '..', 'VERSION')).readline.strip
+  VERSION = open(File.join(File.dirname(__FILE__), '..', 'VERSION')).
+    readline.strip
   DEFAULT_TMP_DIR = "/tmp"
   BATCH_SIZE = 10_000
   GNA_NAMESPACE = UUID.create_v5("globalnames.org", UUID::NameSpace_DNS)
@@ -28,6 +31,10 @@ class DwcaHunter
 
   def self.logger_reset
     self.logger = Logger.new(nil)
+  end
+
+  def self.version
+    VERSION
   end
 
   def self.logger_write(obj_id, message, method = :info)
