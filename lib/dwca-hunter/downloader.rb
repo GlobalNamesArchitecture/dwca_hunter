@@ -12,7 +12,8 @@ class DwcaHunter
       @filename = nil
     end
 
-    #downloads a given file into a specified filename. If block is given returns download progress
+    # downloads a given file into a specified filename. 
+    # If block is given returns download progress
     def download
       raise "#{@source_url} is not accessible" unless @url.valid?
       f = open(@file_path,'wb')
@@ -41,7 +42,9 @@ class DwcaHunter
         percentage = r.to_f/@url.header.content_length * 100
         elapsed_time = Time.now - start_time
         eta = calculate_eta(percentage, elapsed_time)
-        res = {:percentage => percentage, :elapsed_time => elapsed_time, :eta => eta}
+        res = { percentage: percentage, 
+                elapsed_time: elapsed_time, 
+                eta: eta }
         yield res
       end
     end
