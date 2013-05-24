@@ -1,6 +1,11 @@
 class DwcaHunter
   class Resource
     attr_reader :url, :uuid, :download_path
+    
+    def self.unzip(file, dir = nil)
+      Dir.chdir(dir) if dir
+      `unzip -qq -u #{file} > /dev/null 2>&1`
+    end
 
     def initialize(opts)
       @needs_download = !(opts[:download] == false)
@@ -61,8 +66,7 @@ class DwcaHunter
     def unpack_zip
       DwcaHunter::logger_write(self.object_id, 
                                'Unpacking a zip file, it might take a while...')
-      Dir.chdir(@download_dir)
-      `unzip #{@download_file}`
+      self.class.unzip(@download_file, @download_dir)
     end
 
     def unpack_tar
