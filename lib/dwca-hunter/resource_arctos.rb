@@ -3,14 +3,14 @@ class DwcaHunter
   class ResourceArctos < DwcaHunter::Resource
 
     def initialize(opts = {})
-      @title = 'GNUB'
+      @title = 'Arctos'
       @url = 'http://arctos.database.museum/download/gncombined.zip'
       @UUID =  'eea8315d-a244-4625-859a-226675622312'
       @download_path = File.join(DEFAULT_TMP_DIR, 
                                  'dwca_hunter', 
                                  'arctos', 
                                  'data.tar.gz')
-      @synonyms = {}
+      @synonyms = []
       @names = []
       @vernaculars = []
       @extensions = []
@@ -25,21 +25,19 @@ class DwcaHunter
     def make_dwca
       DwcaHunter::logger_write(self.object_id, 'Extracting data')
       get_names
-      # generate_dwca
+      generate_dwca
     end
 
     private
 
     def get_names
       Dir.chdir(@download_dir)
-      sleep 1 until Dir.entries(".").grep(/zip$/).size == 3
       Dir.entries(@download_dir).grep(/zip$/).each do |file|
-        self.class.unzip(file) unless File.exists?(file.gsub!(/zip$/,'csv'))
+        self.class.unzip(file) unless File.exists?(file.gsub(/zip$/,'csv'))
       end
       collect_names 
+      collect_synonyms
       collect_vernaculars
-      require 'ruby-debug'; debugger
-      puts ''
     end
 
     def collect_vernaculars
@@ -61,6 +59,8 @@ class DwcaHunter
           taxon_id: taxon_id,
           vernacular_name_string: vernacular_name_string
         }
+
+        puts "Processed %s vernaculars" % i if i % 10000 == 0
       end
     end
 
@@ -74,21 +74,20 @@ class DwcaHunter
         end
 
         row = split_row(row)
-        taxon_id = row[fields[:related_taxon_name_id]]
-        unless @synonyms[taxon_id]
-          @synonyms[taxon_id] = {
-            accepted_name_usage_id: row[fields[:taxon_name_id]],
-            synonym_authority:      row[fields[:relation_authority]],
-            taxonomic_status:       row[fields[:taxon_relationship]],
-          }
-        else
-          puts "Double synonym: %s" % taxon_id
-        end
+        taxon_id = row[fields[:taxon_name_id]]
+        @synonyms << {
+          taxon_id: row[fields[:related_taxon_name_id]],
+          local_id: taxon_id,
+          name_string: @names_index[taxon_id],
+          #synonym_authority:      row[fields[:relation_authority]],
+          taxonomic_status:       row[fields[:taxon_relationship]],
+        }
+        puts "Processed %s synonyms" % i if i % 10000 == 0
       end
     end
 
     def collect_names
-      collect_synonyms
+      @names_index = {}
       file = open(File.join(@download_dir, 'taxonomy.csv'))
       fields = {}
       file.each_with_index do |row, i|
@@ -96,7 +95,7 @@ class DwcaHunter
           fields = get_fields(row) 
           next
         end
-
+        next unless  row[fields[:display_name]]
         row = split_row(row)
         taxon_id = row[fields[:taxon_name_id]]
         name_string = row[fields[:display_name]].gsub(/<\/?i>/,'')
@@ -114,35 +113,22 @@ class DwcaHunter
         subgenus = row[fields[:subgenus]] 
         species = row[fields[:species]]
         subspecies = row[fields[:subspecies]]
-        accepted_name_usage_id = ''
-        taxonomic_status = ''
-
-        if @synonyms[taxon_id]
-          accepted_name_usage_id = @synonyms[taxon_id][:accepted_name_usage_id]
-          taxonomic_status = @synonyms[taxon_id][:taxonomic_status]
-        end
+        code = row[fields[:nomenclatural_code]]
 
         @names << { taxon_id: taxon_id,
+          local_id: taxon_id,
           name_string: name_string,
           kingdom: kingdom,
           phylum: phylum,
           klass: klass,
-          subclass: subclass,
           order: order,
-          suborder: suborder,
-          superfamily: superfamily,
           family: family,
-          subfamily: subfamily,
-          tribe: tribe,
           genus: genus,
-          subgenus: subgenus,
-          species: species,
-          subspecies: subspecies,
-          accepted_name_usage_id: accepted_name_usage_id,
-          taxonomic_status: taxonomic_status,
+          code: code,
         }
 
-        break if i > 1000
+        @names_index[taxon_id] = name_string
+        puts "Processed %s names" % i if i % 10000 == 0
       end
     end
 
@@ -173,28 +159,60 @@ class DwcaHunter
       DwcaHunter::logger_write(self.object_id, 
                                'Creating DarwinCore Archive file')
       @core = [['http://rs.tdwg.org/dwc/terms/taxonID',
-        'http://rs.tdwg.org/dwc/terms/originalNameUsageID',
-        'http://globalnames.org/terms/originalNameUsageIDPath',
+        'http://globalnames.org/terms/localID',
         'http://rs.tdwg.org/dwc/terms/scientificName',
+        'http://rs.tdwg.org/dwc/terms/kingdom',
+        'http://rs.tdwg.org/dwc/terms/phylum',
+        'http://rs.tdwg.org/dwc/terms/class',
+        'http://rs.tdwg.org/dwc/terms/order',
+        'http://rs.tdwg.org/dwc/terms/family',
+        'http://rs.tdwg.org/dwc/terms/genus',
         'http://rs.tdwg.org/dwc/terms/nomenclaturalCode',
-        'http://rs.tdwg.org/dwc/terms/taxonRank']]
+        ]]
       @names.each do |n|
-        @core << [n[:taxon_id], n[:protolog], n[:name_string], 
-          n[:protolog_path], n[:code], n[:rank]]
+        @core << [n[:taxon_id], n[:name_string], 
+          n[:kingdom], n[:phylum], n[:klass], n[:order], n[:family],
+          n[:genus], n[:code]]
+      end
+      @extensions << { 
+        data: [[
+          'http://rs.tdwg.org/dwc/terms/taxonID',
+          'http://rs.tdwg.org/dwc/terms/vernacularName']], 
+        file_name: 'vernacular_names.txt', 
+        row_type: 'http://rs.gbif.org/terms/1.0/VernacularName' }
+
+      @vernaculars.each do |v|
+        @extensions[-1][:data] << [v[:taxon_id], v[:vernacular_name_string]]
+      end
+
+      @extensions << { 
+        data: [[
+          'http://rs.tdwg.org/dwc/terms/taxonID',
+          'http://globalnames.org/terms/localID',
+          'http://rs.tdwg.org/dwc/terms/scientificName',
+          'http://rs.tdwg.org/dwc/terms/taxonomicStatus',
+          ]], 
+        file_name: 'synonyms.txt', 
+        }
+
+      @synonyms.each do |s|
+        @extensions[-1][:data] << [
+          s[:taxon_id], s[:local_id], 
+          s[:name_string], s[:taxonomic_status]]
       end
       @eml = {
         id: @uuid,
         title: @title,
         authors: [
-          {email: 'deepreef@bishopmuseum.org'}
+          {email: 'dustymc at gmail dot com'}
       ],
         metadata_providers: [
           { first_name: 'Dmitry',
             last_name: 'Mozzherin',
             email: 'dmozzherin@gmail.com' }
       ],
-        abstract: 'Global Names Usage Bank',
-        url: 'http://www.zoobank.org'
+        abstract: 'Arctos is an ongoing effort to integrate access to specimen data, collection-management tools, and external resources on the internet.',
+        url: @url
       }
       super
     end

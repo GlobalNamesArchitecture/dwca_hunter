@@ -3,7 +3,7 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'dwca-hunter'
 opts = { download: false, unpack: false }
 opts = { download: false}
-opts = {}
+# opts = {}
 DwcaHunter::logger = Logger.new($stdout)
 resources = [
   DwcaHunter::ResourceArctos.new(opts)
