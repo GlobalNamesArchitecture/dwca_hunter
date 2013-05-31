@@ -8,7 +8,7 @@ DwcaHunter::logger = Logger.new($stdout)
 resources = [
   DwcaHunter::ResourceArctos.new(opts)
   #DwcaHunter::ResourceGNUB.new(opts)
-  #DwcaHunter::ResourceWikispecies.new(opts), 
+  #DwcaHunter::ResourceWikispecies.new(opts),
   #DwcaHunter::ResourceFreebase.new(opts),
   #DwcaHunter::ResourceITIS.new(opts),
   #DwcaHunter::ResourceNCBI.new(opts),

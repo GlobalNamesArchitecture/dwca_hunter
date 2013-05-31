@@ -6,9 +6,9 @@ class DwcaHunter
       @title = 'Arctos'
       @url = 'http://arctos.database.museum/download/gncombined.zip'
       @UUID =  'eea8315d-a244-4625-859a-226675622312'
-      @download_path = File.join(DEFAULT_TMP_DIR, 
-                                 'dwca_hunter', 
-                                 'arctos', 
+      @download_path = File.join(DEFAULT_TMP_DIR,
+                                 'dwca_hunter',
+                                 'arctos',
                                  'data.tar.gz')
       @synonyms = []
       @names = []
@@ -35,7 +35,7 @@ class DwcaHunter
       Dir.entries(@download_dir).grep(/zip$/).each do |file|
         self.class.unzip(file) unless File.exists?(file.gsub(/zip$/,'csv'))
       end
-      collect_names 
+      collect_names
       collect_synonyms
       collect_vernaculars
     end
@@ -46,10 +46,10 @@ class DwcaHunter
       file.each_with_index do |row, i|
 
         if i == 0
-          fields = get_fields(row) 
+          fields = get_fields(row)
           next
         end
-        
+
         row = split_row(row)
 
         taxon_id = row[fields[:taxon_name_id]]
@@ -69,7 +69,7 @@ class DwcaHunter
       fields = {}
       file.each_with_index do |row, i|
         if i == 0
-          fields = get_fields(row) 
+          fields = get_fields(row)
           next
         end
 
@@ -92,7 +92,7 @@ class DwcaHunter
       fields = {}
       file.each_with_index do |row, i|
         if i == 0
-          fields = get_fields(row) 
+          fields = get_fields(row)
           next
         end
         next unless  row[fields[:display_name]]
@@ -110,7 +110,7 @@ class DwcaHunter
         subfamily = row[fields[:subfamily]]
         tribe = row[fields[:tribe]]
         genus = row[fields[:genus]]
-        subgenus = row[fields[:subgenus]] 
+        subgenus = row[fields[:subgenus]]
         species = row[fields[:species]]
         subspecies = row[fields[:subspecies]]
         code = row[fields[:nomenclatural_code]]
@@ -142,11 +142,11 @@ class DwcaHunter
       encoding_options = {
         :invalid           => :replace,
         :undef             => :replace,
-        :replace           => '',      
-        :universal_newline => true    
+        :replace           => '',
+        :universal_newline => true
       }
-      num_ary = (0...row.size).to_a 
-      row = row.map do |f| 
+      num_ary = (0...row.size).to_a
+      row = row.map do |f|
         f = f.strip.downcase
         f = f.encode ::Encoding.find('ASCII'), encoding_options
         f.to_sym
@@ -156,7 +156,7 @@ class DwcaHunter
 
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Creating DarwinCore Archive file')
       @core = [['http://rs.tdwg.org/dwc/terms/taxonID',
         'http://globalnames.org/terms/localID',
@@ -170,34 +170,34 @@ class DwcaHunter
         'http://rs.tdwg.org/dwc/terms/nomenclaturalCode',
         ]]
       @names.each do |n|
-        @core << [n[:taxon_id], n[:name_string], 
+        @core << [n[:taxon_id], n[:taxon_id], n[:name_string],
           n[:kingdom], n[:phylum], n[:klass], n[:order], n[:family],
           n[:genus], n[:code]]
       end
-      @extensions << { 
+      @extensions << {
         data: [[
           'http://rs.tdwg.org/dwc/terms/taxonID',
-          'http://rs.tdwg.org/dwc/terms/vernacularName']], 
-        file_name: 'vernacular_names.txt', 
+          'http://rs.tdwg.org/dwc/terms/vernacularName']],
+        file_name: 'vernacular_names.txt',
         row_type: 'http://rs.gbif.org/terms/1.0/VernacularName' }
 
       @vernaculars.each do |v|
         @extensions[-1][:data] << [v[:taxon_id], v[:vernacular_name_string]]
       end
 
-      @extensions << { 
+      @extensions << {
         data: [[
           'http://rs.tdwg.org/dwc/terms/taxonID',
           'http://globalnames.org/terms/localID',
           'http://rs.tdwg.org/dwc/terms/scientificName',
           'http://rs.tdwg.org/dwc/terms/taxonomicStatus',
-          ]], 
-        file_name: 'synonyms.txt', 
+          ]],
+        file_name: 'synonyms.txt',
         }
 
       @synonyms.each do |s|
         @extensions[-1][:data] << [
-          s[:taxon_id], s[:local_id], 
+          s[:taxon_id], s[:local_id],
           s[:name_string], s[:taxonomic_status]]
       end
       @eml = {
