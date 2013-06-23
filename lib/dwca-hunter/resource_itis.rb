@@ -195,12 +195,15 @@ class DwcaHunter
         parent_tsn = nil if parent_tsn == ''
         name = [x1, name_part1, x2, name_part2, 
                 sp_marker1, name_part3, sp_marker2, name_part4]
+        canonical_name = name.clone
         name << @authors[author_id] if @authors[author_id] 
         name = name.join(' ').strip.gsub(/\s+/, ' ')
+        canonical_name = canonical_name.join(' ').strip.gsub(/\s+/, ' ')
         rank = @ranks[kingdom_id + '/' + rank_id] ? 
                @ranks[kingdom_id + '/' + rank_id] : 
                ''
         @names[name_tsn] = { name: name, 
+                             canonical_name: canonical_name,
                              status: status, 
                              parent_tsn: parent_tsn, 
                              rank: rank } 
@@ -214,6 +217,7 @@ class DwcaHunter
                 'http://rs.tdwg.org/dwc/terms/parentNameUsageID',
                 'http://rs.tdwg.org/dwc/terms/acceptedNameUsageID',
                 'http://rs.tdwg.org/dwc/terms/scientificName',
+                'http://rs.tdwg.org/ontology/voc/TaxonName#nameComplete',
                 'http://rs.tdwg.org/dwc/terms/taxonomicStatus',
                 'http://rs.tdwg.org/dwc/terms/taxonRank']]
       @extensions << { data: [['http://rs.tdwg.org/dwc/terms/taxonID',
@@ -226,7 +230,7 @@ class DwcaHunter
         d = @names[k]
         accepted_id = @synonyms[k] ? @synonyms[k] : nil
         parent_id = d[:parent_tsn].to_i == 0 ? nil : d[:parent_tsn]
-        row = [k, parent_id, accepted_id, d[:name], d[:status], d[:rank]]
+        row = [k, parent_id, accepted_id, d[:name], d[:canonical_name], d[:status], d[:rank]]
         @core << row
       end
 
