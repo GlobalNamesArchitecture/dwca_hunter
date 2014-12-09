@@ -12,5 +12,5 @@ gem 'rest-client', '~> 1.6'
 group :development do
   gem 'rspec', '~> 2.14'
   gem 'bundler', "~> 1.6"
-  gem 'debugger', '~> 1.6'
+  gem 'byebug', '~> 3.5'
 end

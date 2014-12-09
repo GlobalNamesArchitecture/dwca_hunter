@@ -10,6 +10,7 @@ doc
 
 # bundler
 .bundle
+bundle_bin
 
 # jeweler generated
 pkg
