@@ -22,7 +22,7 @@ class DwcaHunter
       DwcaHunter::logger_write(self.object_id, "Extracting data")
       encode
       collect_data
-      generate_dwca 
+      generate_dwca
     end
 
     def download
@@ -104,13 +104,13 @@ class DwcaHunter
         clade = clade.capitalize if clade.match(/^[A-Z]+$/)
         next if clade.to_s == ""
         clade_id = nil
+        clade = adjust_clade(rec, rank, clade)
         if @clades.key?(clade)
           clade_id = @clades[clade][:id]
         else
           @count += 1
           clade_id = @count
           @clades[clade] = { id: clade_id, rank: rank }
-          clade = adjust_clade(rec, rank, clade)
           @core << [clade_id, nil, parent_id, clade_id, clade, nil, rank.to_s]
           if is_row_rank
             process_name(rec, rank)
