@@ -40,7 +40,7 @@ class DwcaHunter
         res[:subspecies] = []
         if row[2]
           row[2].split("\n").each do |ssp|
-            res[:subspecies] << snp.parse(ssp)[:scientificName][:normalized] 
+            res[:subspecies] << snp.parse(ssp)[:scientificName][:normalized]
           end
         end
         res[:vernaculars] = []

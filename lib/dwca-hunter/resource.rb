@@ -1,7 +1,7 @@
 class DwcaHunter
   class Resource
     attr_reader :url, :uuid, :download_path
-    
+
     def self.unzip(file, dir = nil)
       Dir.chdir(dir) if dir
       `unzip -qq -u #{file} > /dev/null 2>&1`
@@ -23,7 +23,7 @@ class DwcaHunter
     end
 
     def download
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                "Starting download of '%s'" % @url)
       percentage = 0
       if url.match(/^\s*http:\/\//)
@@ -31,13 +31,13 @@ class DwcaHunter
         downloaded_length = dlr.download_with_percentage do |r|
           if r[:percentage].to_i != percentage
             percentage = r[:percentage].to_i
-            msg = "Downloaded %.0f%% in %.0f seconds ETA is %.0f seconds" % 
+            msg = "Downloaded %.0f%% in %.0f seconds ETA is %.0f seconds" %
                           [percentage, r[:elapsed_time], r[:eta]]
             DwcaHunter::logger_write(self.object_id, msg)
           end
         end
-        DwcaHunter::logger_write(self.object_id, 
-                                 "Download finished, Size: %s" % 
+        DwcaHunter::logger_write(self.object_id,
+                                 "Download finished, Size: %s" %
                                   downloaded_length)
       else
         `curl -s #{url} > #{download_path}`
@@ -45,7 +45,7 @@ class DwcaHunter
     end
 
     private
-    
+
     def cleanup(str)
       str.strip!
       str.to_i.to_s == str ? str.to_i : str
@@ -57,38 +57,44 @@ class DwcaHunter
     end
 
     def unpack_bz2
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Unpacking a bz2 file, it might take a while...')
       Dir.chdir(@download_dir)
       `bunzip2 #{@download_file}`
     end
 
     def unpack_zip
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Unpacking a zip file, it might take a while...')
       self.class.unzip(@download_file, @download_dir)
     end
 
+    def unpack_gzip
+      DwcaHunter::logger_write(self.object_id,
+                               'Unpacking gzip file, it might take a while...')
+      self.class.gunzip(@download_file, @download_dir)
+    end
+
     def unpack_tar
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Unpacking a tar file, it might take a while...')
       Dir.chdir(@download_dir)
       `tar zxvf #{@download_file}`
     end
-    
+
     def generate_dwca
       gen = DarwinCore::Generator.new(File.join(@download_dir, 'dwca.tar.gz'))
       gen.add_core(@core, 'taxa.txt')
       @extensions.each_with_index do |extension, i|
-        gen.add_extension(extension[:data], 
-                          extension[:file_name], 
-                          true, 
+        gen.add_extension(extension[:data],
+                          extension[:file_name],
+                          true,
                           extension[:row_type])
       end
       gen.add_meta_xml
       gen.add_eml_xml(@eml)
       gen.pack
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'DarwinCore Archive file is created')
     end
   end

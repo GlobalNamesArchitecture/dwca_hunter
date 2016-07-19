@@ -1,12 +1,13 @@
 #!/usr/bin/env ruby
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'dwca-hunter'
-opts = { download: false, unpack: false }
-opts = { download: false}
+# opts = { download: false, unpack: false }
+# opts = { download: false}
 opts = {}
 DwcaHunter::logger = Logger.new($stdout)
 resources = [
-  DwcaHunter::ResourceBirdLife.new(opts)
+  DwcaHunter::ResourceFishbase.new(opts)
+  # DwcaHunter::ResourceBirdLife.new(opts)
   # DwcaHunter::ResourceMammalSpecies.new(opts)
   # DwcaHunter::ResourceArctos.new(opts)
   # DwcaHunter::ResourceGNUB.new(opts)
