@@ -4,13 +4,13 @@ class DwcaHunter
     def initialize(opts = {})
       @problems_file = open('problems.txt', 'w:utf-8')
       @title = 'Wikispecies'
-      @url = 'http://dumps.wikimedia.org/specieswiki/latest/' + 
+      @url = 'http://dumps.wikimedia.org/specieswiki/latest/' +
              'specieswiki-latest-pages-articles.xml.bz2'
       @url = opts[:url] if opts[:url]
       @uuid = '68923690-0727-473c-b7c5-2ae9e601e3fd'
-      @download_path = File.join(DEFAULT_TMP_DIR, 
-                                 'dwca_hunter', 
-                                 'wikispecies', 
+      @download_path = File.join(DEFAULT_TMP_DIR,
+                                 'dwca_hunter',
+                                 'wikispecies',
                                  'data.xml.bz2')
       @data = []
       @templates = {}
@@ -41,12 +41,12 @@ class DwcaHunter
   private
 
     def enrich_data
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Extracting data from xml file...')
       Dir.chdir(@download_dir)
       f = open('data.xml', 'r:utf-8')
       page_on = false
-      page = '' 
+      page = ''
       page_num = 0
       f.each do |l|
         if l.match(@re[:page_start])
@@ -57,21 +57,21 @@ class DwcaHunter
           if l.match(@re[:page_end])
             page_on = false
             page_xml = Nokogiri::XML.parse(page)
-            template?(page_xml) ? 
-              process_template(page_xml) : 
+            template?(page_xml) ?
+              process_template(page_xml) :
               process_species(page_xml)
             page_num += 1
             if page_num % BATCH_SIZE == 0
-              DwcaHunter::logger_write(self.object_id, 
-                                       "Traversed %s pages" % page_num) 
+              DwcaHunter::logger_write(self.object_id,
+                                       "Traversed %s pages" % page_num)
             end
-            page = '' 
+            page = ''
             @page_title = nil
             @page_id = nil
           end
         end
       end
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Extracted total %s pages' % page_num)
       f.close
     end
@@ -99,8 +99,8 @@ class DwcaHunter
         # d[:classificationPath] = d[:classificationPath].join("|").
         # gsub("Main Page", "Life")
         if i % BATCH_SIZE == 0 && i > 0
-          DwcaHunter::logger_write(self.object_id, 
-                                   "Extended %s classifications" % i) 
+          DwcaHunter::logger_write(self.object_id,
+                                   "Extended %s classifications" % i)
         end
       end
     end
@@ -143,11 +143,11 @@ class DwcaHunter
       return if title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
-        @data << { 
-          taxonId: page_id(x), 
-          canonicalForm: title(x), 
-          scientificName: title(x), 
-          classificationPath: [], 
+        @data << {
+          taxonId: page_id(x),
+          canonicalForm: title(x),
+          scientificName: title(x),
+          classificationPath: [],
           vernacularNames: [] }
         get_full_scientific_name(items)
         get_vernacular_names(items)
@@ -156,7 +156,7 @@ class DwcaHunter
     end
 
     def get_full_scientific_name(items)
-      if items['name'] 
+      if items['name']
         if name = items['name'][0]
           @data[-1][:scientificName] = parse_name(name, @data[-1])
         else
@@ -175,9 +175,9 @@ class DwcaHunter
           vn_list.each do |item|
             language, name = item.split("=").map { |x| x.strip }
             if language && name && language.size < 4 && name.valid_encoding?
-              vnames << { 
-                name: name, 
-                language: language } 
+              vnames << {
+                name: name,
+                language: language }
             end
           end
 
@@ -204,7 +204,7 @@ class DwcaHunter
 
     def find_species_components(x)
       items = get_items(x.xpath('//text').text)
-      is_taxon_item = items.has_key?('name') || 
+      is_taxon_item = items.has_key?('name') ||
                       items.has_key?('taxonavigation')
       return nil unless is_taxon_item
       items
@@ -214,7 +214,7 @@ class DwcaHunter
       item_on = false
       items = {}
       current_item = nil
-      txt.split("\n").each do |l| 
+      txt.split("\n").each do |l|
         item =  l.match(/[\=]+([^\=]+)[\=]+/)
         if item
           current_item = item[1].strip.downcase
@@ -263,45 +263,45 @@ class DwcaHunter
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Creating DarwinCore Archive file')
       @core = [
-        ['http://rs.tdwg.org/dwc/terms/taxonID', 
-         'http://rs.tdwg.org/dwc/terms/scientificName', 
-         'http://rs.tdwg.org/dwc/terms/parentNameUsageID', 
-         'http://globalnames.org/terms/canonicalForm', 
-         'http://rs.tdwg.org/dwc/terms/higherClassification', 
+        ['http://rs.tdwg.org/dwc/terms/taxonID',
+         'http://rs.tdwg.org/dwc/terms/scientificName',
+         'http://rs.tdwg.org/dwc/terms/parentNameUsageID',
+         'http://globalnames.org/terms/canonicalForm',
+         'http://rs.tdwg.org/dwc/terms/higherClassification',
          'http://purl.org/dc/terms/source']
       ]
       DwcaHunter::logger_write(self.object_id, 'Assembling Core Data')
       count = 0
-      @data.map do |d| 
+      @data.map do |d|
         count += 1
         if count % BATCH_SIZE == 0
-          DwcaHunter::logger_write(self.object_id, 
-                                   "Traversing %s core data record" % count) 
+          DwcaHunter::logger_write(self.object_id,
+                                   "Traversing %s core data record" % count)
         end
-        taxon_id = (d[:classificationPath].empty? ? 
-                    d[:taxonId] : 
+        taxon_id = (d[:classificationPath].empty? ?
+                    d[:taxonId] :
                     @templates[d[:classificationPath].
                       last][:id]) rescue d[:taxonId]
         @taxon_ids[d[:taxonId]] = taxon_id
-        parentNameUsageId = (d[:classificationPath].size > 1 ? 
-                             @templates[d[:classificationPath][-2]][:id] : 
+        parentNameUsageId = (d[:classificationPath].size > 1 ?
+                             @templates[d[:classificationPath][-2]][:id] :
                              nil) rescue nil
-        url = 'http://species.wikimedia.org/wiki/' + 
+        url = 'http://species.wikimedia.org/wiki/' +
           URI.encode(d[:canonicalForm].gsub(' ', '_'))
         path = d[:classificationPath]
         path.pop if path[-1] == d[:canonicalForm]
         canonical_form = d[:canonicalForm].gsub(/\(.*\)\s*$/, '').strip
-        scientific_name = (d[:scientificName] == d[:canonicalForm]) ? 
-                           canonical_form : 
+        scientific_name = (d[:scientificName] == d[:canonicalForm]) ?
+                           canonical_form :
                            d[:scientificName]
-        @core << [taxon_id, 
-                  scientific_name, 
-                  parentNameUsageId, 
-                  canonical_form, 
-                  path.join('|'), 
+        @core << [taxon_id,
+                  scientific_name,
+                  parentNameUsageId,
+                  canonical_form,
+                  path.join('|'),
                   url]
       end
       @extensions << { data: [[
@@ -309,14 +309,14 @@ class DwcaHunter
         'http://rs.tdwg.org/dwc/terms/vernacularName',
         'http://purl.org/dc/terms/language'
       ]], file_name: 'vernacular_names.txt' }
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
               'Creating verncaular name extension for DarwinCore Archive file')
       count = 0
       @data.each do |d|
         count += 1
         if count % BATCH_SIZE == 0
-          DwcaHunter::logger_write(self.object_id, 
-                                 "Traversing %s extension data record" % count) 
+          DwcaHunter::logger_write(self.object_id,
+                                 "Traversing %s extension data record" % count)
         end
         d[:vernacularNames].each do |vn|
           taxon_id = @taxon_ids[d[:taxonId]] ? @taxon_ids[d[:taxonId]] : nil
@@ -332,7 +332,7 @@ class DwcaHunter
         authors: [
           { first_name: 'Stephen',
             last_name: 'Thorpe',
-            email: 'stephen_thorpe@yahoo.co.nz', 
+            email: 'stephen_thorpe@yahoo.co.nz',
             url: 'http://species.wikimedia.org/wiki/Main_Page' }],
         abstract: 'The free species directory that anyone can edit.',
         metadata_providers: [
