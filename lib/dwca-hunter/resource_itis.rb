@@ -3,7 +3,7 @@ class DwcaHunter
   class ResourceITIS < DwcaHunter::Resource
     def initialize(opts = {})
       @title = 'ITIS'
-      @url = 'http://www.itis.gov/downloads/itisMySQLTables.tar.gz'
+      @url = 'https://www.itis.gov/downloads/itisMySQLTables.tar.gz'
       @uuid =  '5d066e84-e512-4a2f-875c-0a605d3d9f35'
       @download_path = File.join(DEFAULT_TMP_DIR, 
                                  'dwca_hunter', 
