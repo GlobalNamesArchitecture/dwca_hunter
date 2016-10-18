@@ -29,6 +29,7 @@ pkg
 For MacOS:
 
 .DS_Store
+.vim.custom
 
 # For TextMate
 #*.tmproj

@@ -1,0 +1,11 @@
+AllCops:
+  Exclude:
+    - bundle_bin/**/*
+Metrics/ModuleLength:
+  Max: 1000
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+Style/DotPosition:
+  EnforcedStyle: leading
+# Style/FileName:
+#   Enabled: false
