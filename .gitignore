@@ -50,3 +50,6 @@ For vim:
 #*.rbc
 problems.txt
 tags
+
+# vscode
+.vs

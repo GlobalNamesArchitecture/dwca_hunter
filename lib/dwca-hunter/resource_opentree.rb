@@ -33,7 +33,7 @@ class DwcaHunter
         ],
         url: @url
       }
-      @url = "http://opendata.globalnames.org/id-crossmap/ott2.10draft11.tgz"
+      @url = "http://opendata.globalnames.org/id-crossmap/ott3.0.tgz"
       @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter",
                                  "opentree", "data.tar.gz")
       super
