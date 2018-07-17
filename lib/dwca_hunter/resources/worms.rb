@@ -1,24 +1,25 @@
 # encoding: utf-8
-class DwcaHunter
+module DwcaHunter
   class ResourceWoRMS < DwcaHunter::Resource
     def initialize(opts = {})
+      @command = 'worms'
       @title = 'WoRMS'
       @url = 'http://content60.eol.org/resources/26.tar.gz'
       @uuid =  '9d27a7ad-2e6a-4597-a79b-23fb3b2f8284'
-      @download_path = File.join(DEFAULT_TMP_DIR, 
-                                 'dwca_hunter', 
-                                 'worms', 
+      @download_path = File.join(Dir.tmpdir,
+                                 'dwca_hunter',
+                                 'worms',
                                  'data.tar.gz')
-      @fields = ['dc:identifier', 
-                 'dc:source', 
-                 'dwc:Kingdom', 
-                 'dwc:Phylum', 
-                 'dwc:Class', 
-                 'dwc:Order', 
-                 'dwc:Family', 
-                 'dwc:Genus', 
+      @fields = ['dc:identifier',
+                 'dc:source',
+                 'dwc:Kingdom',
+                 'dwc:Phylum',
+                 'dwc:Class',
+                 'dwc:Order',
+                 'dwc:Family',
+                 'dwc:Genus',
                  'dwc:ScientificName']
-      @rank = { 1 => 'kingdom', 
+      @rank = { 1 => 'kingdom',
                 2 => 'phylum',
                 3 => 'class',
                 4 => 'order',
@@ -30,7 +31,7 @@ class DwcaHunter
       @extensions = []
       @extensions << { data: [[
         'http://rs.tdwg.org/dwc/terms/taxonId',
-        'http://rs.tdwg.org/dwc/terms/scientificName']], 
+        'http://rs.tdwg.org/dwc/terms/scientificName']],
         file_name: 'synonyms.txt' }
       @re = {
         cdata: %r#\<\!\[CDATA\[(.*)\]\]\>#
@@ -44,11 +45,11 @@ class DwcaHunter
         'http://purl.org/dc/terms/taxonRank']]
       super
     end
-    
+
     def unpack
       unpack_tar
     end
-    
+
     def make_dwca
       collect_data
       make_core_data
@@ -76,8 +77,8 @@ class DwcaHunter
           taxon = nil
           count += 1
           if count % BATCH_SIZE == 0
-            DwcaHunter::logger_write(self.object_id, 
-                                     "Extracted %s taxons" % count) 
+            DwcaHunter::logger_write(self.object_id,
+                                     "Extracted %s taxons" % count)
           end
         elsif in_taxon
           item = node.name.to_sym
@@ -89,7 +90,7 @@ class DwcaHunter
               text = DwcaHunter::XML.unescape(text)
             end
             taxon[item] = text
-          elsif node.name == 'synonym' && 
+          elsif node.name == 'synonym' &&
               (cdata = node.inner_xml.match(@re[:cdata]))
             taxon[:synonyms] << cdata[1]
           end
@@ -107,15 +108,15 @@ class DwcaHunter
       DwcaHunter::logger_write(self.object_id, 'Creating core data')
       @data.each_with_index do |taxa, i|
         if i % BATCH_SIZE == 0
-          DwcaHunter::logger_write(self.object_id, 
-                                   'Traversing %s species for core' % i) 
+          DwcaHunter::logger_write(self.object_id,
+                                   'Traversing %s species for core' % i)
         end
         path = get_path(taxa)
         parent_id = get_gn_id(path.join('|'))
-        @core << [taxa[:'dc:identifier'], 
-                  parent_id, taxa[:'dc:source'], 
-                  nil, 
-                  taxa[:'dwc:ScientificName'], 
+        @core << [taxa[:'dc:identifier'],
+                  parent_id, taxa[:'dc:source'],
+                  nil,
+                  taxa[:'dwc:ScientificName'],
                   'species']
 
         taxa[:synonyms].each do |synonym|
@@ -126,8 +127,8 @@ class DwcaHunter
           path_string = path.join("|")
           unless @known_paths[path_string]
             @known_paths[path_string] = 1
-            parent_id = (path.size == 1) ? 
-                        nil : 
+            parent_id = (path.size == 1) ?
+                        nil :
                         get_gn_id([path[0..-2]].join('|'))
             id = get_gn_id(path_string)
             @core << [id, parent_id, nil, nil, path[-1], @rank[path.size]]
@@ -146,7 +147,7 @@ class DwcaHunter
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Creating DarwinCore Archive file')
       @eml = {
           id: @uuid,
@@ -160,12 +161,12 @@ class DwcaHunter
               last_name: 'Mozzherin',
               email: 'dmozzherin@gmail.com' }
             ],
-          abstract: 'The aim of a World Register of Marine Species (WoRMS) ' + 
-                    'is to provide an authoritative and comprehensive list ' + 
-                    'of names of marine organisms, including information ' + 
-                    'on synonymy. While highest priority goes to valid ' + 
-                    'names, other names in use are included so that this ' + 
-                    'register can serve as a guide to interpret taxonomic ' + 
+          abstract: 'The aim of a World Register of Marine Species (WoRMS) ' +
+                    'is to provide an authoritative and comprehensive list ' +
+                    'of names of marine organisms, including information ' +
+                    'on synonymy. While highest priority goes to valid ' +
+                    'names, other names in use are included so that this ' +
+                    'register can serve as a guide to interpret taxonomic ' +
                     'literature.',
       }
       super

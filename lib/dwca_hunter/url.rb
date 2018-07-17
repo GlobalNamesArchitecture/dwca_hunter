@@ -1,4 +1,4 @@
-class DwcaHunter
+module DwcaHunter
   class Url
 
     attr_reader :net_http, :path, :header

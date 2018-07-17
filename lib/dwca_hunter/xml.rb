@@ -1,4 +1,4 @@
-class DwcaHunter
+module DwcaHunter
   module XML
     def self.escape(input)
       result = input.dup.strip

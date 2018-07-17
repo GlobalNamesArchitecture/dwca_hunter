@@ -1,6 +1,7 @@
-class DwcaHunter
+module DwcaHunter
   class ResourceMammalSpecies < DwcaHunter::Resource
     def initialize(opts = {})
+      @command = "mammal-species"
       @title = "The Mammal Species of The World"
       @uuid = "464dafec-1037-432d-8449-c0b309e0a030"
       @data = []
@@ -9,7 +10,7 @@ class DwcaHunter
       @clades = {"Mammalia" => { rank: "class", id: @count}}
       @url = "http://www.departments.bucknell.edu"\
              "/biology/resources/msw3/export.asp"
-      @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter",
+      @download_path = File.join(Dir.tmpdir, "dwca_hunter",
                                  "mammalsp", "msw3-all.csv")
       super
     end
@@ -46,7 +47,7 @@ class DwcaHunter
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Creating DarwinCore Archive file')
       core_init
       extensions_init
@@ -79,7 +80,7 @@ class DwcaHunter
       synonyms = synonyms.map do |s|
         next if s.match(/<u>/)
         if s.match(/^[a-z]/)
-          s = rec[:genus] + " " + s 
+          s = rec[:genus] + " " + s
         end
         @count += 1
         id = @count
@@ -97,7 +98,7 @@ class DwcaHunter
       parent_id = @clades["Mammalia"][:id]
       is_row_rank = false
       [:order, :suborder, :infraorder, :superfamily, :family,
-       :subfamily, :tribe, :genus, :subgenus, 
+       :subfamily, :tribe, :genus, :subgenus,
        :species, :subspecies].each do |rank|
        is_row_rank = true if rank == rec[:taxonlevel].downcase.to_sym
         clade = rec[rank]
@@ -169,9 +170,9 @@ class DwcaHunter
     def extensions_init
       @extensions << { data: [['http://rs.tdwg.org/dwc/terms/taxonID',
                                'http://rs.tdwg.org/dwc/terms/vernacularName',
-                               'http://purl.org/dc/terms/language']], 
-                       file_name: 'vernacular_names.txt', 
-                       row_type: 'http://rs.gbif.org/terms/1.0/VernacularName' 
+                               'http://purl.org/dc/terms/language']],
+                       file_name: 'vernacular_names.txt',
+                       row_type: 'http://rs.gbif.org/terms/1.0/VernacularName'
                      }
     end
   end

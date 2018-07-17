@@ -1,6 +1,6 @@
-class DwcaHunter
+module DwcaHunter
   class Resource
-    attr_reader :url, :uuid, :download_path
+    attr_reader :url, :uuid, :download_path, :title, :abbr, :command
 
     def self.unzip(file, dir = nil)
       Dir.chdir(dir) if dir

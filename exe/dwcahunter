@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "thor"
+require "dwca_hunter"
+
+# DwcaHunterCLI determines command line interface to the gem functionality
+class DwcaHunterCLI < Thor
+  desc "list [SEARCH]", "lists available sources to convert filtered by search"
+  def list(search = nil)
+    printf("List of available resources to convert to DwCA.\n\n" \
+      "For conversion use 'dwcahunter convert resource_command'\n\n")
+    print_table(collect_resources(search))
+  end
+
+  desc "version", "returns version of the package"
+  def version
+    puts DwcaHunter.version
+  end
+
+  desc "convert source_command", "converts a datasource to a DarwinCore Archive"
+  def convert(command)
+    resource = DwcaHunter.resources.select { |r| r.new.command == command }
+    if resource.empty?
+      puts "Unknown data source. Use 'dwcahunter list [SEARCH]' command" \
+           "to see available data sources."
+    else
+      DwcaHunter.process(resource[0].new)
+    end
+  end
+
+  private
+
+  def collect_resources(search)
+    res = []
+    DwcaHunter.resources.each do |resource|
+      r = resource.new
+      if add_resource?(search, r)
+        res << { n: nil, command: r.command, resource: r.title }
+      end
+    end
+    res.sort_by { |r| r[:command] }.each_with_object([]) do  |r, a|
+      r[:n] = a.size + 1
+      a << r
+    end
+  end
+
+  def add_resource?(search, resource)
+    !search || (resource.title =~ /#{search}/i ||
+                resource.command =~ /#{search}/i ||
+                resource.abbr =~ /#{search}/i)
+  end
+
+  def print_table(data)
+    table = [data.first.keys.map { |k| k.to_s.capitalize}] + data.map(&:values)
+    widths = table_widths(table)
+    table.insert(1, widths.map { |n| "-" * n })
+    format = widths.collect { |n| "%-#{n}s" }.join("  ")
+    table.each { |line| printf "  #{format}  \n", *line }
+  end
+
+  def table_widths(table)
+    table.each_with_object([]) do |line, widths|
+      c = 0
+      line.each do |col|
+        col = col.to_s
+        wide_enough = widths[c] && widths[c] > col.length
+        widths[c] = wide_enough ? widths[c] : col.length
+        c += 1
+      end
+    end
+  end
+end
+
+DwcaHunterCLI.start(ARGV)

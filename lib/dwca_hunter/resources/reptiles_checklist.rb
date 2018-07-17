@@ -2,14 +2,15 @@
 require 'biodiversity'
 require 'csv'
 
-class DwcaHunter
+module DwcaHunter
   class ResourceReptilesChecklist < DwcaHunter::Resource
     def initialize(opts = {})
+      @command = "reptile-database"
       @title = "The Reptile Database"
       @uuid = "c24e0905-4980-4e1d-aff2-ee0ef54ea1f8"
       @data = []
       @extensions = []
-      @download_path = File.join(DEFAULT_TMP_DIR, 'dwca_hunter',
+      @download_path = File.join(Dir.tmpdir, 'dwca_hunter',
                                  'reptilesdb', 'fake.tar.gz')
       super
     end

@@ -1,12 +1,13 @@
-class DwcaHunter
+module DwcaHunter
   # Resource for FishBase
   class ResourceFishbase < DwcaHunter::Resource
     attr_reader :title, :abbr
     def initialize(opts = {})
+      @command = "fishbase"
       @title = "FishBase Cache"
       @abbr = "FishBase Cache"
       @uuid = "bacd21f0-44e0-43e2-914c-70929916f257"
-      @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter", "fishbase",
+      @download_path = File.join(Dir.tmpdir, "dwca_hunter", "fishbase",
                                  "fishbase.tsv")
       @extensions = []
       super

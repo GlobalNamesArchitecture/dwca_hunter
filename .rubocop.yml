@@ -1,11 +1,33 @@
 AllCops:
+  TargetRubyVersion: 2.4
   Exclude:
+    - bin/**/*
+    - db/**/*
     - bundle_bin/**/*
-Metrics/ModuleLength:
-  Max: 1000
+  Include:
+    - dwca_hunter.gemspec
+    - exe/dwcahunter
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
-Style/DotPosition:
-  EnforcedStyle: leading
-# Style/FileName:
-#   Enabled: false
+
+Layout/DotPosition:
+  EnforcedStyle: trailing
+
+Metrics/BlockLength:
+  Exclude:
+    - Rakefile
+    - "*.gemspec"
+    - "**/*.rake"
+    - "spec/**/*spec.rb"
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Naming/FileName:
+  Exclude:
+    - Gemfile
+    - Rakefile

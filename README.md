@@ -1,6 +1,6 @@
 # DarwinCoreArchive Hunter
 
-[![dwca-hunter][code-climate-img]][code-climate]
+[![dwca_hunter][code-climate-img]][code-climate]
 
 DarwinCoreArchive Hunter is an application designed for reformatting publicly
 accessable scientific name sources into [Dawrin Core Archive format][dwca]
@@ -13,9 +13,9 @@ Currently we have DWCA generators for
 * WoRMS
 * Freebase
 
-See dwca-hunter/bin/dwca-hunt.rb as a example how to use the code.
+See dwca_hunter/bin/dwca-hunt.rb as a example how to use the code.
 
-## Contributing to dwca-hunter
+## Contributing to dwca_hunter
 
 * Check out the latest master to make sure the feature hasn't been implemented
   or the bug hasn't been fixed yet
@@ -35,5 +35,5 @@ See dwca-hunter/bin/dwca-hunt.rb as a example how to use the code.
 Copyright (c) 2011-2016 Dmitry Mozzherin. See LICENSE.txt for further details.
 
 [code-climate-img]: https://codeclimate.com/badge.png
-[code-climate]: https://codeclimate.com/github/GlobalNamesArchitecture/dwca-hunter
+[code-climate]: https://codeclimate.com/github/GlobalNamesArchitecture/dwca_hunter
 [dwca]: http://code.google.com/p/gbif-ecat/wiki/DwCArchive

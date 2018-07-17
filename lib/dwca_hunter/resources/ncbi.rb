@@ -1,12 +1,13 @@
 # encoding: utf-8
-class DwcaHunter
+module DwcaHunter
   class ResourceNCBI < DwcaHunter::Resource
 
     def initialize(opts = {})
+      @command = 'ncbi'
       @title = 'NCBI'
       @url = 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz'
       @uuid =  '97d7633b-5f79-4307-a397-3c29402d9311'
-      @download_path = File.join(DEFAULT_TMP_DIR,
+      @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',
                                  'ncbi',
                                  'data.tar.gz')

@@ -1,4 +1,4 @@
-class DwcaHunter
+module DwcaHunter
   module Encoding
     def self.latin1_to_utf8(file_path)
       new_file = file_path + '.utf_8'

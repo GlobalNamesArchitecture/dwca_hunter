@@ -1,12 +1,13 @@
 # encoding: utf-8
-class DwcaHunter
+module DwcaHunter
   class ResourceArctos < DwcaHunter::Resource
 
     def initialize(opts = {})
+      @command = 'arctos'
       @title = 'Arctos'
       @url = 'http://arctos.database.museum/download/gncombined.zip'
       @UUID =  'eea8315d-a244-4625-859a-226675622312'
-      @download_path = File.join(DEFAULT_TMP_DIR,
+      @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',
                                  'arctos',
                                  'data.tar.gz')

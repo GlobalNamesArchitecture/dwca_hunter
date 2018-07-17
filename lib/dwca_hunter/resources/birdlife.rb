@@ -1,13 +1,14 @@
-class DwcaHunter
+module DwcaHunter
   class ResourceBirdLife < DwcaHunter::Resource
     def initialize(opts = {})
+      @command = "bird-life"
       @title = "BirdLife International"
       @uuid = "b1d8de7a-ab96-455f-acd8-f3fff2d7d169"
       @data = []
       @extensions = []
       @url = "http://www.birdlife.org/datazone/userfiles"\
              "/file/Species/Taxonomy/BirdLife_Checklist_Version_70.zip"
-      @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter", "birdlife",
+      @download_path = File.join(Dir.tmpdir, "dwca_hunter", "birdlife",
                                  "fake.zip")
       @clades = {}
       super

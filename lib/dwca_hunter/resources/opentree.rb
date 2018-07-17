@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-class DwcaHunter
+module DwcaHunter
   # Harvesting resource for Open Tree of Life
   class ResourceOpenTree < DwcaHunter::Resource
     def initialize(opts = {})
+      @command = "open-tree"
       @title = "Open Tree of Life Reference Taxonomy"
       @uuid = "e10865e2-cdd9-4f97-912f-08f3d5ef49f7"
       @data = []
@@ -34,7 +35,7 @@ class DwcaHunter
         url: @url
       }
       @url = "http://opendata.globalnames.org/id-crossmap/ott3.0.tgz"
-      @download_path = File.join(DEFAULT_TMP_DIR, "dwca_hunter",
+      @download_path = File.join(Dir.tmpdir, "dwca_hunter",
                                  "opentree", "data.tar.gz")
       super
     end
@@ -91,9 +92,9 @@ class DwcaHunter
     end
 
     def generate_core
-      @classification.each_with_index do |d|
-        if (count % BATCH_SIZE).zero?
-          DwcaHunter.logger_write(object_id, "Traversing #{count} core " \
+      @classification.each do |d|
+        if (@count % BATCH_SIZE).zero?
+          DwcaHunter.logger_write(object_id, "Traversing #{@count} core " \
                                   "data record")
         end
         @core << [d[0], d[0], d[2], d[1], d[3], d[4], d[5]]

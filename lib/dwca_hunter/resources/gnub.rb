@@ -1,15 +1,16 @@
 # encoding: utf-8
-class DwcaHunter
+module DwcaHunter
   class ResourceGNUB < DwcaHunter::Resource
     def initialize(opts = {})
+      @command = 'gnub'
       @title = 'GNUB'
       @url = 'http://gnub.org/datadump/gni_export.zip'
       @UUID =  'd34ed224-78e7-485d-a478-adc2558a0f68'
-      @download_path = File.join(DEFAULT_TMP_DIR, 
-                                 'dwca_hunter', 
-                                 'gnub', 
+      @download_path = File.join(Dir.tmpdir,
+                                 'dwca_hunter',
+                                 'gnub',
                                  'data.tar.gz')
-      @ranks = {} 
+      @ranks = {}
       @kingdoms = {}
       @authors = {}
       @vernaculars = {}
@@ -24,7 +25,7 @@ class DwcaHunter
     def unpack
       unpack_zip
     end
-    
+
     def make_dwca
       DwcaHunter::logger_write(self.object_id, 'Extracting data')
       get_names
@@ -37,15 +38,15 @@ class DwcaHunter
       codes = get_codes
       file = Dir.entries(@download_dir).grep(/txt$/).first
       open(File.join(@download_dir, file)).each_with_index do |line, i|
-        next if i == 0 || (data = line.strip) == '' 
+        next if i == 0 || (data = line.strip) == ''
         data = data.split("\t")
         protolog = data[0].downcase
         protolog_path = data[1].downcase
         name_string = data[2]
         rank = data[3]
         code = codes[data[4].to_i]
-        taxon_id = UUID.create_v5(name_string + 
-                                  protolog_path + 
+        taxon_id = UUID.create_v5(name_string +
+                                  protolog_path +
                                   rank, GNA_NAMESPACE)
         @names << { taxon_id: taxon_id,
                     name_string: name_string,
@@ -67,7 +68,7 @@ class DwcaHunter
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id, 
+      DwcaHunter::logger_write(self.object_id,
                                'Creating DarwinCore Archive file')
       @core = [['http://rs.tdwg.org/dwc/terms/taxonID',
                 'http://rs.tdwg.org/dwc/terms/originalNameUsageID',
@@ -76,7 +77,7 @@ class DwcaHunter
                 'http://rs.tdwg.org/dwc/terms/nomenclaturalCode',
                 'http://rs.tdwg.org/dwc/terms/taxonRank']]
       @names.each do |n|
-        @core << [n[:taxon_id], n[:protolog], n[:name_string], 
+        @core << [n[:taxon_id], n[:protolog], n[:name_string],
                   n[:protolog_path], n[:code], n[:rank]]
       end
       @eml = {

@@ -1,14 +1,15 @@
 # encoding: utf-8
-class DwcaHunter
+module DwcaHunter
   class ResourceWikispecies < DwcaHunter::Resource
     def initialize(opts = {})
       @problems_file = open('problems.txt', 'w:utf-8')
+      @command = "wikispecies"
       @title = 'Wikispecies'
       @url = 'http://dumps.wikimedia.org/specieswiki/latest/' +
              'specieswiki-latest-pages-articles.xml.bz2'
       @url = opts[:url] if opts[:url]
       @uuid = '68923690-0727-473c-b7c5-2ae9e601e3fd'
-      @download_path = File.join(DEFAULT_TMP_DIR,
+      @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',
                                  'wikispecies',
                                  'data.xml.bz2')
@@ -120,7 +121,7 @@ class DwcaHunter
     end
 
     def process_template(x)
-      name = title(x).gsub!(@re[:template], '').strip
+      name = page_title(x).gsub!(@re[:template], '').strip
       text = x.xpath('//text').text.strip
       parent_name = text.match(@re[:template_link])
       if parent_name
@@ -140,13 +141,13 @@ class DwcaHunter
     end
 
     def process_species(x)
-      return if title(x).match(/Wikispecies/i)
+      return if page_title(x).match(/Wikispecies/i)
       items = find_species_components(x)
       if items
         @data << {
           taxonId: page_id(x),
-          canonicalForm: title(x),
-          scientificName: title(x),
+          canonicalForm: page_title(x),
+          scientificName: page_title(x),
           classificationPath: [],
           vernacularNames: [] }
         get_full_scientific_name(items)
@@ -226,7 +227,7 @@ class DwcaHunter
       items
     end
 
-    def title(x)
+    def page_title(x)
       @page_title ||= x.xpath('//title').first.text
     end
 
@@ -235,7 +236,7 @@ class DwcaHunter
     end
 
     def template?(page_xml)
-      !!title(page_xml).match(@re[:template])
+      !!page_title(page_xml).match(@re[:template])
     end
 
     def parse_name(name_string, taxa)

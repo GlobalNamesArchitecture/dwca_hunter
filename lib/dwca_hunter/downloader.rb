@@ -1,5 +1,5 @@
 # encoding: utf-8
-class DwcaHunter
+module DwcaHunter
   class Downloader
 
     attr_reader :url
@@ -12,7 +12,7 @@ class DwcaHunter
       @filename = nil
     end
 
-    # downloads a given file into a specified filename. 
+    # downloads a given file into a specified filename.
     # If block is given returns download progress
     def download
       raise "#{@source_url} is not accessible" unless @url.valid?
@@ -42,8 +42,8 @@ class DwcaHunter
         percentage = r.to_f/@url.header.content_length * 100
         elapsed_time = Time.now - start_time
         eta = calculate_eta(percentage, elapsed_time)
-        res = { percentage: percentage, 
-                elapsed_time: elapsed_time, 
+        res = { percentage: percentage,
+                elapsed_time: elapsed_time,
                 eta: eta }
         yield res
       end
