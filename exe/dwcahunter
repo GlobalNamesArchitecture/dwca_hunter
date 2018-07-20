@@ -39,7 +39,7 @@ class DwcaHunterCLI < Thor
         res << { n: nil, command: r.command, resource: r.title }
       end
     end
-    res.sort_by { |r| r[:command] }.each_with_object([]) do  |r, a|
+    res.sort_by { |r| r[:command] }.each_with_object([]) do |r, a|
       r[:n] = a.size + 1
       a << r
     end
@@ -51,13 +51,15 @@ class DwcaHunterCLI < Thor
                 resource.abbr =~ /#{search}/i)
   end
 
+  # rubocop:disable Metrics/AbcSize
   def print_table(data)
-    table = [data.first.keys.map { |k| k.to_s.capitalize}] + data.map(&:values)
+    table = [data.first.keys.map { |k| k.to_s.capitalize }] + data.map(&:values)
     widths = table_widths(table)
     table.insert(1, widths.map { |n| "-" * n })
     format = widths.collect { |n| "%-#{n}s" }.join("  ")
     table.each { |line| printf "  #{format}  \n", *line }
   end
+  # rubocop:enable Metrics/AbcSize
 
   def table_widths(table)
     table.each_with_object([]) do |line, widths|
