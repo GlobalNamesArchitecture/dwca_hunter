@@ -4,6 +4,8 @@
 require "thor"
 require "dwca_hunter"
 
+DwcaHunter.logger = Logger.new($stdout)
+
 # DwcaHunterCLI determines command line interface to the gem functionality
 class DwcaHunterCLI < Thor
   desc "list [SEARCH]", "lists available sources to convert filtered by search"
