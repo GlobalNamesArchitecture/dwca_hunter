@@ -3,6 +3,7 @@
 ## Unreleased (placeholder for the next version)
 
 ## [v0.5.0]
+
 - Add [#8] convert project to a `Ruby gem`
 
 ## Footnotes

@@ -1,4 +1,4 @@
-# encoding: utf-8
+__END__
 module DwcaHunter
   class ResourceGNUB < DwcaHunter::Resource
     def initialize(opts = {})
@@ -98,4 +98,3 @@ module DwcaHunter
     end
   end
 end
-

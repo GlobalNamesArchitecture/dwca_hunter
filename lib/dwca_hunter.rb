@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
+require "biodiversity"
 require "logger"
 require "fileutils"
 require "uri"
 require "tmpdir"
 require "net/http"
 require "json"
+require "htmlentities"
 require "dwc_archive"
 require "dwca_hunter/resource"
 require "rest_client"

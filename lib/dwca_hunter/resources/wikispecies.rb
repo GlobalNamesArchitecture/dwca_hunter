@@ -5,7 +5,7 @@ module DwcaHunter
       @problems_file = open('problems.txt', 'w:utf-8')
       @command = "wikispecies"
       @title = 'Wikispecies'
-      @url = 'http://dumps.wikimedia.org/specieswiki/latest/' +
+      @url = 'http://dumps.wikimedia.org/specieswiki/latest/' \
              'specieswiki-latest-pages-articles.xml.bz2'
       @url = opts[:url] if opts[:url]
       @uuid = '68923690-0727-473c-b7c5-2ae9e601e3fd'
@@ -347,4 +347,3 @@ module DwcaHunter
 
   end
 end
-
