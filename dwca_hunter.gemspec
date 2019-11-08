@@ -32,9 +32,10 @@ Gem::Specification.new do |gem|
   gem.add_dependency "htmlentities", "~> 4.3"
   gem.add_dependency "nokogiri", "~> 1.8"
   gem.add_dependency "rest-client", "~> 2.0"
+  gem.add_dependency "ruby-xz", "~> 1.0"
   gem.add_dependency "thor", "~> 0.19"
 
-  gem.add_development_dependency "bundler", "~> 1.16"
+  gem.add_development_dependency "bundler", "~> 2.0"
   gem.add_development_dependency "byebug", "~> 10.0"
   gem.add_development_dependency "coveralls", "~> 0.8"
   gem.add_development_dependency "rake", "~> 12.3"
