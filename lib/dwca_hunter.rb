@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
+require "base64"
 require "biodiversity"
-require "logger"
-require "fileutils"
-require "uri"
-require "tmpdir"
-require "net/http"
-require "json"
-require "htmlentities"
 require "dwc_archive"
 require "dwca_hunter/resource"
+require "fileutils"
+require "htmlentities"
+require "json"
+require "logger"
+require "net/http"
 require "rest_client"
-require "base64"
+require "tmpdir"
+require "uri"
 
 Dir[File.join(__dir__, "dwca_hunter", "*.rb")].
   each { |f| require f }

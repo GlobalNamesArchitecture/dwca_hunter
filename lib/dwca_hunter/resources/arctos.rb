@@ -5,18 +5,22 @@ module DwcaHunter
     def initialize(opts = {})
       @command = 'arctos'
       @title = 'Arctos'
-      @url = 'http://arctos.database.museum/download/gncombined.zip'
+      @url = 'https://www.dropbox.com/s/jo44d1vd9bkdwm8/arctos.zip?dl=1'
       @UUID =  'eea8315d-a244-4625-859a-226675622312'
       @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',
                                  'arctos',
-                                 'data.tar.gz')
+                                 'data.zip')
       @synonyms = []
       @names = []
       @vernaculars = []
       @extensions = []
       super(opts)
-      @gnub_dir = File.join(@download_dir, 'gnub')
+    end
+
+    def download
+      puts "Downloading cached verion of the file. Ask Arctos to generate new."
+        `curl -s -L #{@url} -o #{@download_path}`
     end
 
     def unpack
@@ -42,7 +46,7 @@ module DwcaHunter
     end
 
     def collect_vernaculars
-      file = open(File.join(@download_dir, 'common_name.csv'))
+      file = open(File.join(@download_dir, 'flat_common_name.csv'))
       fields = {}
       file.each_with_index do |row, i|
 
@@ -66,7 +70,7 @@ module DwcaHunter
     end
 
     def collect_synonyms
-      file = open(File.join(@download_dir, 'taxon_relations.csv'))
+      file = open(File.join(@download_dir, 'flat_relationships.csv'))
       fields = {}
       file.each_with_index do |row, i|
         if i == 0
@@ -89,13 +93,14 @@ module DwcaHunter
 
     def collect_names
       @names_index = {}
-      file = open(File.join(@download_dir, 'taxonomy.csv'))
+      file = open(File.join(@download_dir, 'flat_classification.csv'))
       fields = {}
       file.each_with_index do |row, i|
         if i == 0
           fields = get_fields(row)
           next
         end
+
         next unless  row[fields[:display_name]]
         row = split_row(row)
         taxon_id = row[fields[:taxon_name_id]]
@@ -152,7 +157,10 @@ module DwcaHunter
         f = f.encode ::Encoding.find('ASCII'), encoding_options
         f.to_sym
       end
-      Hash[row.zip(num_ary)]
+      res = Hash[row.zip(num_ary)]
+      require 'byebug'; byebug
+      puts ''
+      res
     end
 
 
@@ -219,4 +227,3 @@ module DwcaHunter
     end
   end
 end
-

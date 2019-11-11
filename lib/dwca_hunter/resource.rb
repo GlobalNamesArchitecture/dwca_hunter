@@ -7,6 +7,11 @@ module DwcaHunter
       `unzip -qq -u #{file} > /dev/null 2>&1`
     end
 
+    def self.gunzip(file, dir = nil)
+      Dir.chdir(dir) if dir
+      `gunzip #{file}`
+    end
+
     def initialize(opts)
       @needs_download = !(opts[:download] == false)
       @needs_unpack = !(opts[:unpack] == false)

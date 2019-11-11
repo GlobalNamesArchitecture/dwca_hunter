@@ -2,17 +2,15 @@
 module DwcaHunter
   class ResourceWikispecies < DwcaHunter::Resource
     def initialize(opts = {})
-      @problems_file = open('problems.txt', 'w:utf-8')
+      @wikisp_path = File.join(Dir.tmpdir, 'dwca_hunter', 'wikispecies')
+      @problems_file = open(File.join(Dir.tmpdir, 'problems.txt'), 'w:utf-8')
       @command = "wikispecies"
       @title = 'Wikispecies'
       @url = 'http://dumps.wikimedia.org/specieswiki/latest/' \
              'specieswiki-latest-pages-articles.xml.bz2'
       @url = opts[:url] if opts[:url]
       @uuid = '68923690-0727-473c-b7c5-2ae9e601e3fd'
-      @download_path = File.join(Dir.tmpdir,
-                                 'dwca_hunter',
-                                 'wikispecies',
-                                 'data.xml.bz2')
+      @download_path = File.join(@wikisp_path, 'data.xml.bz2')
       @data = []
       @templates = {}
       @taxon_ids = {}

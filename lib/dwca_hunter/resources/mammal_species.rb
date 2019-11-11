@@ -193,9 +193,12 @@ module DwcaHunter
 
     def black_species
       res = {}
-      path = File.join(__dir__, "..", "..", "..", "files", "species-black.txt")
-      File.open(path).each do |l|
-        res[l.strip] = 1
+      cnt = URI.parse(
+        "https://www.dropbox.com/s/jl7sc7whuidsu8w/species-black.txt?dl=1"
+      ) do |f|
+        f.each_line do |l|
+          res[l.strip] = 1
+        end
       end
       res
     end
