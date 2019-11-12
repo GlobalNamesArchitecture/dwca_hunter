@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dwca_hunter (0.5.2)
+    dwca_hunter (0.5.4)
       biodiversity (~> 3.5)
       dwc-archive (~> 1.0)
       gn_uuid (~> 0.5)
@@ -137,4 +137,4 @@ DEPENDENCIES
   solargraph (~> 0.23)
 
 BUNDLED WITH
-   2.0.1
+   2.0.2

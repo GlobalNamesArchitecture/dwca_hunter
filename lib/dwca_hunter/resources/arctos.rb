@@ -5,7 +5,7 @@ module DwcaHunter
     def initialize(opts = {})
       @command = 'arctos'
       @title = 'Arctos'
-      @url = 'https://www.dropbox.com/s/jo44d1vd9bkdwm8/arctos.zip?dl=1'
+      @url = 'https://www.dropbox.com/s/3rmny5d8cfm9mmp/arctos.tar.gz?dl=1'
       @UUID =  'eea8315d-a244-4625-859a-226675622312'
       @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',
@@ -15,6 +15,8 @@ module DwcaHunter
       @names = []
       @vernaculars = []
       @extensions = []
+      @synonyms_hash = {}
+      @vernaculars_hash = {}
       super(opts)
     end
 
@@ -24,7 +26,7 @@ module DwcaHunter
     end
 
     def unpack
-      unpack_zip
+      unpack_tar
     end
 
     def make_dwca
@@ -37,92 +39,72 @@ module DwcaHunter
 
     def get_names
       Dir.chdir(@download_dir)
-      Dir.entries(@download_dir).grep(/zip$/).each do |file|
-        self.class.unzip(file) unless File.exists?(file.gsub(/zip$/,'csv'))
-      end
       collect_names
       collect_synonyms
       collect_vernaculars
     end
 
     def collect_vernaculars
-      file = open(File.join(@download_dir, 'flat_common_name.csv'))
-      fields = {}
+      file = CSV.open(File.join(@download_dir, 'common_name.csv'),
+        headers: true)
       file.each_with_index do |row, i|
 
-        if i == 0
-          fields = get_fields(row)
-          next
+        canonical = row['SCIENTIFIC_NAME']
+        vernacular_name_string = row['COMMON_NAME']
+
+        if @vernaculars_hash.has_key?(canonical)
+          @vernaculars_hash[canonical] << vernacular_name_string
+        else
+          @vernaculars_hash[canonical] = [vernacular_name_string]
         end
-
-        row = split_row(row)
-
-        taxon_id = row[fields[:taxon_name_id]]
-        vernacular_name_string = row[fields[:common_name]]
-
-        @vernaculars << {
-          taxon_id: taxon_id,
-          vernacular_name_string: vernacular_name_string
-        }
 
         puts "Processed %s vernaculars" % i if i % 10000 == 0
       end
     end
 
     def collect_synonyms
-      file = open(File.join(@download_dir, 'flat_relationships.csv'))
-      fields = {}
+      file = CSV.open(File.join(@download_dir, 'relationships.csv'),
+       headers: true)
       file.each_with_index do |row, i|
-        if i == 0
-          fields = get_fields(row)
-          next
+        canonical = row['scientific_name']
+        if @synonyms_hash.has_key?(canonical)
+          @synonyms_hash[canonical] <<
+          { synonym: row['related_name'], status: row['TAXON_RELATIONSHIP']}
+        else
+          @synonyms_hash[canonical] = [
+          { synonym: row['related_name'], status: row['TAXON_RELATIONSHIP']}
+          ]
         end
-
-        row = split_row(row)
-        taxon_id = row[fields[:taxon_name_id]]
-        @synonyms << {
-          taxon_id: row[fields[:related_taxon_name_id]],
-          local_id: taxon_id,
-          name_string: @names_index[taxon_id],
-          #synonym_authority:      row[fields[:relation_authority]],
-          taxonomic_status:       row[fields[:taxon_relationship]],
-        }
         puts "Processed %s synonyms" % i if i % 10000 == 0
       end
     end
 
     def collect_names
       @names_index = {}
-      file = open(File.join(@download_dir, 'flat_classification.csv'))
-      fields = {}
+      file = CSV.open(File.join(@download_dir, 'classification.csv'),
+       headers: true)
       file.each_with_index do |row, i|
-        if i == 0
-          fields = get_fields(row)
-          next
-        end
+        next unless  row['display_name']
+        name_string = row['display_name'].gsub(/<\/?i>/,'')
+        canonical = row['scientific_name']
+        kingdom = row['kingdom']
+        phylum = row['phylum']
+        klass = row['phylclass']
+        subclass = row['subclass']
+        order = row['phylorder']
+        suborder = row['suborder']
+        superfamily = row['superfamily']
+        family = row['family']
+        subfamily = row['subfamily']
+        tribe = row['tribe']
+        genus = row['genus']
+        subgenus = row['subgenus']
+        species = row['species']
+        subspecies = row['subspecies']
+        code = row['nomenclatural_code']
 
-        next unless  row[fields[:display_name]]
-        row = split_row(row)
-        taxon_id = row[fields[:taxon_name_id]]
-        name_string = row[fields[:display_name]].gsub(/<\/?i>/,'')
-        kingdom = row[fields[:kingdom]]
-        phylum = row[fields[:phylum]]
-        klass = row[fields[:phylclass]]
-        subclass = row[fields[:subclass]]
-        order = row[fields[:phylorder]]
-        suborder = row[fields[:suborder]]
-        superfamily = row[fields[:superfamily]]
-        family = row[fields[:family]]
-        subfamily = row[fields[:subfamily]]
-        tribe = row[fields[:tribe]]
-        genus = row[fields[:genus]]
-        subgenus = row[fields[:subgenus]]
-        species = row[fields[:species]]
-        subspecies = row[fields[:subspecies]]
-        code = row[fields[:nomenclatural_code]]
-
+        taxon_id = "ARCT_#{i}"
         @names << { taxon_id: taxon_id,
-          local_id: taxon_id,
           name_string: name_string,
           kingdom: kingdom,
           phylum: phylum,
@@ -133,36 +115,25 @@ module DwcaHunter
           code: code,
         }
 
-        @names_index[taxon_id] = name_string
+        update_vernacular(taxon_id, canonical)
+        update_synonym(taxon_id, canonical)
         puts "Processed %s names" % i if i % 10000 == 0
       end
     end
 
-    def split_row(row)
-      row = row.strip.gsub(/^"/, '').gsub(/"$/, '')
-      row.split('","')
-    end
-
-    def get_fields(row)
-      row = row.split(",")
-      encoding_options = {
-        :invalid           => :replace,
-        :undef             => :replace,
-        :replace           => '',
-        :universal_newline => true
-      }
-      num_ary = (0...row.size).to_a
-      row = row.map do |f|
-        f = f.strip.downcase
-        f = f.encode ::Encoding.find('ASCII'), encoding_options
-        f.to_sym
+    def update_vernacular(taxon_id, canonical)
+      return unless @vernaculars_hash.has_key?(canonical)
+      @vernaculars_hash[canonical].each do |vern|
+        @vernaculars << [taxon_id, vern, 'en']
       end
-      res = Hash[row.zip(num_ary)]
-      require 'byebug'; byebug
-      puts ''
-      res
     end
 
+    def update_synonym(taxon_id, canonical)
+      return unless @synonyms_hash.has_key?(canonical)
+      @synonyms_hash[canonical].each do |syn|
+        @synonyms << [taxon_id, syn[:synonym], syn[:status]]
+      end
+    end
 
     def generate_dwca
       DwcaHunter::logger_write(self.object_id,
