@@ -39,9 +39,9 @@ module DwcaHunter
 
     def get_names
       Dir.chdir(@download_dir)
-      collect_names
       collect_synonyms
       collect_vernaculars
+      collect_names
     end
 
     def collect_vernaculars
@@ -69,10 +69,10 @@ module DwcaHunter
         canonical = row['scientific_name']
         if @synonyms_hash.has_key?(canonical)
           @synonyms_hash[canonical] <<
-          { synonym: row['related_name'], status: row['TAXON_RELATIONSHIP']}
+          { name_string: row['related_name'], status: row['TAXON_RELATIONSHIP']}
         else
           @synonyms_hash[canonical] = [
-          { synonym: row['related_name'], status: row['TAXON_RELATIONSHIP']}
+          { name_string: row['related_name'], status: row['TAXON_RELATIONSHIP']}
           ]
         end
         puts "Processed %s synonyms" % i if i % 10000 == 0
@@ -103,7 +103,7 @@ module DwcaHunter
         subspecies = row['subspecies']
         code = row['nomenclatural_code']
 
-        taxon_id = "ARCT_#{i}"
+        taxon_id = "ARCT_#{i+1}"
         @names << { taxon_id: taxon_id,
           name_string: name_string,
           kingdom: kingdom,
@@ -124,14 +124,15 @@ module DwcaHunter
     def update_vernacular(taxon_id, canonical)
       return unless @vernaculars_hash.has_key?(canonical)
       @vernaculars_hash[canonical].each do |vern|
-        @vernaculars << [taxon_id, vern, 'en']
+        @vernaculars << { taxon_id: taxon_id, vern: vern }
       end
     end
 
     def update_synonym(taxon_id, canonical)
       return unless @synonyms_hash.has_key?(canonical)
       @synonyms_hash[canonical].each do |syn|
-        @synonyms << [taxon_id, syn[:synonym], syn[:status]]
+        @synonyms << { taxon_id: taxon_id, name_string: syn[:name_string],
+          status: syn[:status] }
       end
     end
 
@@ -139,7 +140,6 @@ module DwcaHunter
       DwcaHunter::logger_write(self.object_id,
                                'Creating DarwinCore Archive file')
       @core = [['http://rs.tdwg.org/dwc/terms/taxonID',
-        'http://globalnames.org/terms/localID',
         'http://rs.tdwg.org/dwc/terms/scientificName',
         'http://rs.tdwg.org/dwc/terms/kingdom',
         'http://rs.tdwg.org/dwc/terms/phylum',
@@ -150,7 +150,7 @@ module DwcaHunter
         'http://rs.tdwg.org/dwc/terms/nomenclaturalCode',
         ]]
       @names.each do |n|
-        @core << [n[:taxon_id], n[:taxon_id], n[:name_string],
+        @core << [n[:taxon_id], n[:name_string],
           n[:kingdom], n[:phylum], n[:klass], n[:order], n[:family],
           n[:genus], n[:code]]
       end
@@ -162,23 +162,19 @@ module DwcaHunter
         row_type: 'http://rs.gbif.org/terms/1.0/VernacularName' }
 
       @vernaculars.each do |v|
-        @extensions[-1][:data] << [v[:taxon_id], v[:vernacular_name_string]]
+        @extensions[-1][:data] << [v[:taxon_id], v[:vern]]
       end
 
       @extensions << {
         data: [[
           'http://rs.tdwg.org/dwc/terms/taxonID',
-          'http://globalnames.org/terms/localID',
           'http://rs.tdwg.org/dwc/terms/scientificName',
           'http://rs.tdwg.org/dwc/terms/taxonomicStatus',
           ]],
         file_name: 'synonyms.txt',
         }
-
       @synonyms.each do |s|
-        @extensions[-1][:data] << [
-          s[:taxon_id], s[:local_id],
-          s[:name_string], s[:taxonomic_status]]
+        @extensions[-1][:data] << [s[:taxon_id], s[:name_string], s[:status]]
       end
       @eml = {
         id: @uuid,
