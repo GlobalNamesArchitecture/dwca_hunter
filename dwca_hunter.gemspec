@@ -38,7 +38,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "bundler", "~> 2.0"
   gem.add_development_dependency "byebug", "~> 10.0"
   gem.add_development_dependency "coveralls", "~> 0.8"
-  gem.add_development_dependency "rake", "~> 12.3"
+  gem.add_development_dependency "rake", "~> 13.0"
   gem.add_development_dependency "rspec", "~> 3.7"
   gem.add_development_dependency "rubocop", "~> 0.58"
   gem.add_development_dependency "solargraph", "~> 0.23"
