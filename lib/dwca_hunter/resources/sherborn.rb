@@ -74,14 +74,18 @@ module DwcaHunter
         id: @uuid,
         title: @title,
         authors: [
-          {email: 'C. D. Sherborn'}
+          { first_name: 'Charles Davies',
+            last_name: 'Sherborn',
+          }
       ],
         metadata_providers: [
           { first_name: 'Dmitry',
             last_name: 'Mozzherin',
             email: 'dmozzherin@gmail.com' }
       ],
-        abstract: 'Index Animalium is a monumental work that covers 400 000 zoological names registered by science between 1758 and 1850',
+        abstract: 'Index Animalium is a monumental work that covers ' \
+                  '400 000 zoological names registered by science ' \
+                  'between 1758 and 1850',
         url: @url
       }
       super
