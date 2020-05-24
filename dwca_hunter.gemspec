@@ -6,7 +6,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "dwca_hunter/version"
 
 Gem::Specification.new do |gem|
-  gem.required_ruby_version = ">= 2.4"
+  gem.required_ruby_version = ">= 2.6.6"
   gem.name          = "dwca_hunter"
   gem.version       = DwcaHunter.version
   gem.license       = "MIT"
@@ -30,7 +30,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "dwc-archive", "~> 1.0"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
-  gem.add_dependency "nokogiri", "~> 1.8"
+  gem.add_dependency "nokogiri", "~> 1.10"
   gem.add_dependency "rest-client", "~> 2.0"
   gem.add_dependency "ruby-xz", "~> 1.0"
   gem.add_dependency "thor", "~> 0.19"
@@ -38,8 +38,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "bundler", "~> 2.0"
   gem.add_development_dependency "byebug", "~> 10.0"
   gem.add_development_dependency "coveralls", "~> 0.8"
-  gem.add_development_dependency "rake", "~> 12.3"
-  gem.add_development_dependency "rspec", "~> 3.7"
-  gem.add_development_dependency "rubocop", "~> 0.58"
-  gem.add_development_dependency "solargraph", "~> 0.23"
+  gem.add_development_dependency "rake", "~> 13.0"
+  gem.add_development_dependency "rspec", "~> 3.9"
+  gem.add_development_dependency "rubocop", "~> 0.84"
 end

@@ -37,9 +37,7 @@ class DwcaHunterCLI < Thor
     res = []
     DwcaHunter.resources.each do |resource|
       r = resource.new
-      if add_resource?(search, r)
-        res << { n: nil, command: r.command, resource: r.title }
-      end
+      res << { n: nil, command: r.command, resource: r.title } if add_resource?(search, r)
     end
     res.sort_by { |r| r[:command] }.each_with_object([]) do |r, a|
       r[:n] = a.size + 1

@@ -1,5 +1,6 @@
 AllCops:
-  TargetRubyVersion: 2.4
+  NewCops: disable
+  TargetRubyVersion: 2.6.6
   Exclude:
     - bin/**/*
     - db/**/*
