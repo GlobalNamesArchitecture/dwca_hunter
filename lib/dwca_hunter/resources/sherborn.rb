@@ -5,7 +5,7 @@ module DwcaHunter
     def initialize(opts = {})
       @command = 'sherborn'
       @title = 'Index Animalium'
-      @url = 'https://uofi.box.com/v/sherborn-ind-anim'
+      @url = 'https://uofi.box.com/shared/static/kj8a26a3bcrraa4kccoyz5jr5uqrqoe6.csv'
       @UUID =  '05ad6ca2-fc37-47f4-983a-72e535420e28'
       @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',
@@ -44,10 +44,11 @@ module DwcaHunter
     def collect_names
       dupes = {}
       @names_index = {}
-      file = CSV.open(File.join(@download_dir, 'sherborn.csv'),
-       headers: false)
+      file = CSV.open(File.join(@download_dir, 'data.csv'),
+       headers: false, col_sep: "\t")
       file.each_with_index do |row, i|
         next if  dupes.has_key?(row[1])
+        dupes[row[1]] = true;
         taxon_id = row[0]
         name_string = row[1]
 
