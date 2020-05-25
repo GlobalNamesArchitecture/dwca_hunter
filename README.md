@@ -32,7 +32,7 @@ See dwca_hunter/bin/dwca-hunt.rb as a example how to use the code.
 
 ## Copyright
 
-Copyright (c) 2011-2016 Dmitry Mozzherin. See LICENSE.txt for further details.
+Copyright (c) 2011-2020 Dmitry Mozzherin. See LICENSE.txt for further details.
 
 [code-climate-img]: https://codeclimate.com/badge.png
 [code-climate]: https://codeclimate.com/github/GlobalNamesArchitecture/dwca_hunter
