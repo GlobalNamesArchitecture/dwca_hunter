@@ -54,7 +54,7 @@ module DwcaHunter
         genus = e[:dwc][:genus].capitalize
         genus = nil if genus.match(/incertae/)
         name = {
-          taxon_id: e[:id],
+          taxon_id: e[:internal_id],
           kingdom: "Animalia",
           phylum: "Chordata",
           klass: "Mammalia",
