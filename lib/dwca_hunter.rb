@@ -51,5 +51,35 @@ module DwcaHunter
         c < Resource
       end
     end
+
+    def swap_authors(auth)
+      reg = Regexp.new(/^([\(]?)(.*?)(([\s,\)][^[:upper:]]*)?$)/)
+      match = reg.match(auth)
+      return auth if match.nil?
+      a1, a2, a3 = match[1..3]
+      a2mod = a2.gsub('&', ',')
+      ary2 = a2mod.split(',').map(&:strip)
+      a2 = move_initials(ary2) if ary2.size > 1
+      "#{a1}#{a2}#{a3}"
+    end
+
+    def move_initials(ary)
+      res = []
+      ary.each do |a|
+        if res.empty?
+          res << a
+          next
+        end
+        match = /^([[:upper:]]{1,4})(\sJr)?$/.match(a)
+        if !match.nil?
+          initialls = match[1].split('').join('. ')
+          res[-1] = "#{initialls}. #{res[-1]}#{match[2].to_s}"
+        else
+          res << a
+        end
+      end
+      res.size == 1 ? res[0] : "#{res[0..-2].join(', ')} & #{res[-1]}"
+    end
   end
 end
+
