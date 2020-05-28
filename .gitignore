@@ -56,3 +56,8 @@ tags
 
 # vscode
 .vs
+
+# misc
+*.json
+*.csv
+*.txt
