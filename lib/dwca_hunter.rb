@@ -52,8 +52,9 @@ module DwcaHunter
       end
     end
 
-    def swap_authors(auth)
+    def normalize_authors(auth)
       reg = Regexp.new(/^([\(]?)(.*?)(([\s,\)][^[:upper:]]*)?$)/)
+      auth = auth.gsub(/duPont/, 'du Pont')
       match = reg.match(auth)
       return auth if match.nil?
       a1, a2, a3 = match[1..3]

@@ -82,7 +82,7 @@ module DwcaHunter
         }
         if subspecies.to_s == ""
           auth = row["Authority"].to_s
-          auth = DwcaHunter::swap_authors(auth) if auth != ""
+          auth = DwcaHunter::normalize_authors(auth) if auth != ""
           name[:name_string] = clean(
             "#{genus} #{species} #{auth}"
             .strip

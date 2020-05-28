@@ -122,7 +122,7 @@ norm_authors = [
 "Sangster, Garcia-R & Trewick, 2015",
 "d'Orbigny & Lafresnaye, 1838",
 "da Rosa Pinto, 1963",
-"duPont & Rabor, 1973",
+"du Pont & Rabor, 1973",
 "van Tets, Meredith, Fullagar & P. Davidson, 1988",
 "J. W. von Müller, 1851",
 "H. K. B. von Rosenberg, 1861",
@@ -146,10 +146,10 @@ describe DwcaHunter do
     end
   end
 
-  describe ".swap_authors" do
+  describe ".normalize_authors" do
     it "normalizes authors format" do
       authors.each_with_index do |a, i|
-        res = subject.swap_authors(a)
+        res = subject.normalize_authors(a)
         expect(res).to eq(norm_authors[i])
       end
     end
