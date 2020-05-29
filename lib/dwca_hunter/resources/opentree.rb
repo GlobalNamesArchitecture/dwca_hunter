@@ -34,7 +34,7 @@ module DwcaHunter
         ],
         url: @url
       }
-      @url = "http://opendata.globalnames.org/id-crossmap/ott3.0.tgz"
+      @url = "http://files.opentreeoflife.org/ott/ott3.2/ott3.2.tgz"
       @download_path = File.join(Dir.tmpdir, "dwca_hunter",
                                  "opentree", "data.tar.gz")
       super
@@ -51,11 +51,11 @@ module DwcaHunter
     end
 
     def download
+      puts "Downloading cached data, update it at oot website!!"
       return unless @needs_download
       DwcaHunter.logger_write(object_id, "Downloading file -- "\
                                "it will take some time...")
-      dlr = DwcaHunter::Downloader.new(url, @download_path)
-      dlr.download
+      `curl -L #{url} -o #{@download_path}`
     end
 
     private
@@ -66,8 +66,8 @@ module DwcaHunter
     end
 
     def set_vars
-      @taxonomy = File.join(@download_dir, "ott", "taxonomy.tsv")
-      @synonyms = File.join(@download_dir, "ott", "synonyms.tsv")
+      @taxonomy = File.join(@download_dir, "ott3.2", "taxonomy.tsv")
+      @synonyms = File.join(@download_dir, "ott3.2", "synonyms.tsv")
     end
 
     def classification
