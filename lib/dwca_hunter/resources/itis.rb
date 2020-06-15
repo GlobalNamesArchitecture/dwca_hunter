@@ -1,15 +1,16 @@
-# encoding: utf-8
+# frozen_string_literal: true
+
 module DwcaHunter
   class ResourceITIS < DwcaHunter::Resource
     def initialize(opts = {})
-      @command = 'itis'
-      @title = 'ITIS'
-      @url = 'https://www.itis.gov/downloads/itisMySQLTables.tar.gz'
-      @uuid =  '5d066e84-e512-4a2f-875c-0a605d3d9f35'
+      @command = "itis"
+      @title = "ITIS"
+      @url = "https://www.itis.gov/downloads/itisMySQLTables.tar.gz"
+      @uuid = "5d066e84-e512-4a2f-875c-0a605d3d9f35"
       @download_path = File.join(Dir.tmpdir,
-                                 'dwca_hunter',
-                                 'itis',
-                                 'data.tar.gz')
+                                 "dwca_hunter",
+                                 "itis",
+                                 "data.tar.gz")
       @ranks = {}
       @kingdoms = {}
       @authors = {}
@@ -19,20 +20,20 @@ module DwcaHunter
       @names = {}
       @extensions = []
       super(opts)
-      @itis_dir = File.join(@download_dir, 'itis')
+      @itis_dir = File.join(@download_dir, "itis")
     end
 
     def unpack
       unpack_tar
-      dir = Dir.entries(@download_dir).select {|e| e.match(/itisMySQL/)}[0]
+      dir = Dir.entries(@download_dir).select { |e| e.match(/itisMySQL/) }[0]
       FileUtils.mv(File.join(@download_dir, dir), @itis_dir)
 
       # Create a file with the same name as the directory we extracted.
-      FileUtils.touch(File.join(@itis_dir, 'version_' + dir))
+      FileUtils.touch(File.join(@itis_dir, "version_" + dir))
     end
 
     def make_dwca
-      DwcaHunter::logger_write(self.object_id, 'Extracting data')
+      DwcaHunter.logger_write(object_id, "Extracting data")
       get_ranks
       get_kingdoms
       get_authors
@@ -42,7 +43,8 @@ module DwcaHunter
       generate_dwca
     end
 
-  private
+    private
+
     def get_ranks
       # 0    kingdom_id integer not null
       # 1    rank_id smallint not null
@@ -50,15 +52,15 @@ module DwcaHunter
       # 3    dir_parent_rank_id smallint not null
       # 4    req_parent_rank_id smallint not null
       # 5    update_date date not null
-      rank_file = File.join(@itis_dir, 'taxon_unit_types')
-      f = open(rank_file, 'r:utf-8')
+      rank_file = File.join(@itis_dir, "taxon_unit_types")
+      f = open(rank_file, "r:utf-8")
       f.each do |l|
-        l.encode!('UTF-8',
-                  'ISO-8859-1',
+        l.encode!("UTF-8",
+                  "ISO-8859-1",
                   invalid: :replace,
-                  replace: '?')
-        row = l.strip.split('|')
-        @ranks[row[0].strip + '/' + row[1].strip] = row[2].strip
+                  replace: "?")
+        row = l.strip.split("|")
+        @ranks[row[0].strip + "/" + row[1].strip] = row[2].strip
       end
     end
 
@@ -67,9 +69,9 @@ module DwcaHunter
       # 1    kingdom_name char(10) not null
       # 2    update_date date not null
 
-      f = open(File.join(@itis_dir, 'kingdoms'))
+      f = open(File.join(@itis_dir, "kingdoms"))
       f.each do |l|
-        data = l.strip.split('|')
+        data = l.strip.split("|")
         @kingdoms[data[0].strip] = data[1].strip
       end
     end
@@ -80,13 +82,13 @@ module DwcaHunter
       # 2    update_date date not null
       # 3    kingdom_id smallint not null
 
-      f = open(File.join(@itis_dir, 'taxon_authors_lkp'))
+      f = open(File.join(@itis_dir, "taxon_authors_lkp"))
       f.each do |l|
-        l.encode!('UTF-8',
-                  'ISO-8859-1',
+        l.encode!("UTF-8",
+                  "ISO-8859-1",
                   invalid: :replace,
-                  replace: '?')
-        data = l.strip.split('|')
+                  replace: "?")
+        data = l.strip.split("|")
         @authors[data[0].strip] = data[1].strip
       end
     end
@@ -100,22 +102,22 @@ module DwcaHunter
       # 5    primary key (tsn,vernacular_name,language)
       #      constraint "itis".vernaculars_key
 
-      f = open(File.join(@itis_dir, 'vernaculars'))
+      f = open(File.join(@itis_dir, "vernaculars"))
       f.each_with_index do |l, i|
         if i % BATCH_SIZE == 0
-          DwcaHunter::logger_write(self.object_id,
-                                   "Extracted %s vernacular names" % i)
+          DwcaHunter.logger_write(object_id,
+                                  "Extracted %s vernacular names" % i)
         end
-        l.encode!('UTF-8',
-                  'ISO-8859-1',
+        l.encode!("UTF-8",
+                  "ISO-8859-1",
                   invalid: :replace,
-                  replace: '?')
-        data = l.split('|').map { |d| d.strip }
+                  replace: "?")
+        data = l.split("|").map(&:strip)
         name_tsn = data[0]
         string   = data[1]
         language = data[2]
-        language = 'Common name' if language == 'unspecified'
-        @vernaculars[name_tsn] = { name:string, language:language }
+        language = "Common name" if language == "unspecified"
+        @vernaculars[name_tsn] = { name: string, language: language }
       end
     end
 
@@ -124,17 +126,17 @@ module DwcaHunter
       # 1    tsn_accepted integer not null
       # 2    update_date date not null
 
-      f = open(File.join(@itis_dir, 'synonym_links'))
+      f = open(File.join(@itis_dir, "synonym_links"))
       f.each_with_index do |l, i|
         if i % BATCH_SIZE == 0
-          DwcaHunter::logger_write(self.object_id,
-                                   "Extracted %s synonyms" % i)
+          DwcaHunter.logger_write(object_id,
+                                  "Extracted %s synonyms" % i)
         end
-        l.encode!('UTF-8',
-                  'ISO-8859-1',
+        l.encode!("UTF-8",
+                  "ISO-8859-1",
                   invalid: :replace,
-                  replace: '?')
-        data = l.split('|').map { |d| d.strip }
+                  replace: "?")
+        data = l.split("|").map(&:strip)
         synonym_name_tsn = data[0]
         accepted_name_tsn = data[1]
         @synonyms[synonym_name_tsn] = accepted_name_tsn
@@ -167,19 +169,19 @@ module DwcaHunter
       # 22   update_date date not null
       # 23   uncertain_prnt_ind char(3)
 
-      f = open(File.join(@itis_dir, 'taxonomic_units'))
+      f = open(File.join(@itis_dir, "taxonomic_units"))
       f.each_with_index do |l, i|
         if i % BATCH_SIZE == 0
-          DwcaHunter::logger_write(self.object_id,
-                                   "Extracted %s names" % i)
+          DwcaHunter.logger_write(object_id,
+                                  "Extracted %s names" % i)
         end
-        l.encode!('UTF-8',
-                  'ISO-8859-1',
+        l.encode!("UTF-8",
+                  "ISO-8859-1",
                   invalid: :replace,
-                  replace: '?')
-        data = l.split("|").map { |d| d.strip }
-        name_tsn   = data[0]
-        x1         = data[1]
+                  replace: "?")
+        data = l.split("|").map(&:strip)
+        name_tsn = data[0]
+        x1 = data[1]
         name_part1 = data[2]
         x2         = data[3]
         name_part2 = data[4]
@@ -193,16 +195,15 @@ module DwcaHunter
         kingdom_id = data[20]
         rank_id    = data[21]
 
-        parent_tsn = nil if parent_tsn == ''
+        parent_tsn = nil if parent_tsn == ""
         name = [x1, name_part1, x2, name_part2,
                 sp_marker1, name_part3, sp_marker2, name_part4]
         canonical_name = name.clone
         name << @authors[author_id] if @authors[author_id]
-        name = name.join(' ').strip.gsub(/\s+/, ' ')
-        canonical_name = canonical_name.join(' ').strip.gsub(/\s+/, ' ')
-        rank = @ranks[kingdom_id + '/' + rank_id] ?
-               @ranks[kingdom_id + '/' + rank_id] :
-               ''
+        name = name.join(" ").strip.gsub(/\s+/, " ")
+        canonical_name = canonical_name.join(" ").strip.gsub(/\s+/, " ")
+        rank = @ranks[kingdom_id + "/" + rank_id] ||
+               ""
         @names[name_tsn] = { name: name,
                              canonical_name: canonical_name,
                              status: status,
@@ -212,58 +213,57 @@ module DwcaHunter
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id,
-                               'Creating DarwinCore Archive file')
-      @core = [['http://rs.tdwg.org/dwc/terms/taxonID',
-                'http://rs.tdwg.org/dwc/terms/parentNameUsageID',
-                'http://rs.tdwg.org/dwc/terms/acceptedNameUsageID',
-                'http://rs.tdwg.org/dwc/terms/scientificName',
-                'http://rs.tdwg.org/ontology/voc/TaxonName#nameComplete',
-                'http://rs.tdwg.org/dwc/terms/taxonomicStatus',
-                'http://rs.tdwg.org/dwc/terms/taxonRank']]
-      @extensions << { data: [['http://rs.tdwg.org/dwc/terms/taxonID',
-                               'http://rs.tdwg.org/dwc/terms/vernacularName',
-                               'http://purl.org/dc/terms/language']],
-                       file_name: 'vernacular_names.txt',
-                       row_type: 'http://rs.gbif.org/terms/1.0/VernacularName'
-                     }
-      @names.keys.each_with_index do |k, i|
+      DwcaHunter.logger_write(object_id,
+                              "Creating DarwinCore Archive file")
+      @core = [["http://rs.tdwg.org/dwc/terms/taxonID",
+                "http://rs.tdwg.org/dwc/terms/parentNameUsageID",
+                "http://rs.tdwg.org/dwc/terms/acceptedNameUsageID",
+                "http://rs.tdwg.org/dwc/terms/scientificName",
+                "http://rs.tdwg.org/ontology/voc/TaxonName#nameComplete",
+                "http://rs.tdwg.org/dwc/terms/taxonomicStatus",
+                "http://rs.tdwg.org/dwc/terms/taxonRank"]]
+      @extensions << { data: [["http://rs.tdwg.org/dwc/terms/taxonID",
+                               "http://rs.tdwg.org/dwc/terms/vernacularName",
+                               "http://purl.org/dc/terms/language"]],
+                       file_name: "vernacular_names.txt",
+                       row_type: "http://rs.gbif.org/terms/1.0/VernacularName" }
+      @names.keys.each_with_index do |k, _i|
         d = @names[k]
-        accepted_id = @synonyms[k] ? @synonyms[k] : nil
+        accepted_id = @synonyms[k] || nil
         parent_id = d[:parent_tsn].to_i == 0 ? nil : d[:parent_tsn]
         row = [k, parent_id, accepted_id, d[:name], d[:canonical_name], d[:status], d[:rank]]
         @core << row
       end
 
-      @vernaculars.keys.each_with_index do |k, i|
+      @vernaculars.keys.each_with_index do |k, _i|
         d = @vernaculars[k]
         @extensions[0][:data] << [k, d[:name], d[:language]]
       end
 
       @eml = {
-          id: @uuid,
-          title: @title,
-          authors: [
-            {email: 'itiswebmaster@itis.gov'}
-          ],
-          metadata_providers: [
-            { first_name: 'Dmitry',
-              last_name: 'Mozzherin',
-              email: 'dmozzherin@gmail.com' }
-            ],
-          abstract: 'The White House Subcommittee on Biodiversity and ' +
-                    'Ecosystem Dynamics has identified systematics as a ' +
-                    'research priority that is fundamental to ecosystem ' +
-                    'management and biodiversity conservation. This primary ' +
-                    'need identified by the Subcommittee requires ' +
-                    'improvements in the organization of, and access to, ' +
-                    'standardized nomenclature. ITIS (originally referred ' +
-                    'to as the Interagency Taxonomic Information System) ' +
-                    'was designed to fulfill these requirements. In the ' +
-                    'future, the ITIS will provide taxonomic data and a ' +
-                    'directory of taxonomic expertise that will support ' +
-                    'the system',
-          url: 'http://www.itis.gov'
+        id: @uuid,
+        title: @title,
+        authors: [
+          { email: "itiswebmaster@itis.gov" }
+        ],
+        metadata_providers: [
+          { first_name: "Dmitry",
+            last_name: "Mozzherin",
+            email: "dmozzherin@gmail.com" }
+        ],
+        abstract: "The White House Subcommittee on Biodiversity and " \
+                    "Ecosystem Dynamics has identified systematics as a " \
+                    "research priority that is fundamental to ecosystem " \
+                    "management and biodiversity conservation. This primary " \
+                    "need identified by the Subcommittee requires " \
+                    "improvements in the organization of, and access to, " \
+                    "standardized nomenclature. ITIS (originally referred " \
+                    "to as the Interagency Taxonomic Information System) " \
+                    "was designed to fulfill these requirements. In the " \
+                    "future, the ITIS will provide taxonomic data and a " \
+                    "directory of taxonomic expertise that will support " \
+                    "the system",
+        url: "http://www.itis.gov"
       }
       super
     end

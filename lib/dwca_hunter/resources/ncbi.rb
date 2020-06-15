@@ -1,19 +1,19 @@
-# encoding: utf-8
+# frozen_string_literal: true
+
 module DwcaHunter
   class ResourceNCBI < DwcaHunter::Resource
-
     def initialize(opts = {})
-      @command = 'ncbi'
-      @title = 'NCBI'
-      @url = 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz'
-      @uuid =  '97d7633b-5f79-4307-a397-3c29402d9311'
+      @command = "ncbi"
+      @title = "NCBI"
+      @url = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
+      @uuid = "97d7633b-5f79-4307-a397-3c29402d9311"
       @download_path = File.join(Dir.tmpdir,
-                                 'dwca_hunter',
-                                 'ncbi',
-                                 'data.tar.gz')
+                                 "dwca_hunter",
+                                 "ncbi",
+                                 "data.tar.gz")
       @names = {}
       @data = []
-      @collected_names = ['genbank common name', 'common name', 'valid']
+      @collected_names = ["genbank common name", "common name", "valid"]
       @core = []
       @extensions = []
       super
@@ -33,25 +33,24 @@ module DwcaHunter
     private
 
     def set_vars
-      @names_file = File.join(@download_dir, 'names.dmp')
-      @nodes_file = File.join(@download_dir, 'nodes.dmp')
+      @names_file = File.join(@download_dir, "names.dmp")
+      @nodes_file = File.join(@download_dir, "nodes.dmp")
     end
 
     def get_names
-      DwcaHunter::logger_write(object_id, 'Collecting names...')
+      DwcaHunter.logger_write(object_id, "Collecting names...")
       open(@names_file).each_with_index do |line, i|
-        if i > 0 && i % BATCH_SIZE == 0
-          DwcaHunter::logger_write(object_id, 'Collected %s names...' % i)
-        end
-        line = line.split("|").map {|l| cleanup(l)}
+        DwcaHunter.logger_write(object_id, "Collected %s names..." % i) if i > 0 && i % BATCH_SIZE == 0
+        line = line.split("|").map { |l| cleanup(l) }
         id = line[0]
         next if id == 1
+
         name = line[1]
         name_type = line[3]
-        name_type = 'valid' if name_type == 'scientific name'
+        name_type = "valid" if name_type == "scientific name"
         begin
           name = name.gsub(/(^|\s)('|")(.*?)\2(\s|-|$)/, '\1\3\5').
-                      gsub(/\s+/, ' ')
+                 gsub(/\s+/, " ")
         rescue NoMethodError
           puts "wrong name: %s" % name
           next
@@ -66,12 +65,11 @@ module DwcaHunter
     def get_classification
       DwcaHunter.logger_write(object_id, "Building classification...")
       open(@nodes_file, "r:utf-8").each_with_index do |line, i|
-        if i > 0 && i % BATCH_SIZE == 0
-          DwcaHunter.logger_write(object_id, "Collected %s nodes..." % i)
-        end
-        line = line.split('|').map {|l| cleanup(l)}
+        DwcaHunter.logger_write(object_id, "Collected %s nodes..." % i) if i > 0 && i % BATCH_SIZE == 0
+        line = line.split("|").map { |l| cleanup(l) }
         id = line[0]
         next if id == 1
+
         parent_tax_id = line[1]
         rank = line[2]
         hidden_flag = line[10]
@@ -80,6 +78,7 @@ module DwcaHunter
         rank = "" if rank == "no rank"
         parent_tax_id = nil if parent_tax_id == 1
         next unless @names[id] && @names[id]["valid"]
+
         vernacular_names = []
         synonyms = []
         @names[id].keys.each do |k|

@@ -5,7 +5,7 @@ module DwcaHunter
   # to DarwinCore Archive file
   class ResourceMammalSpecies < DwcaHunter::Resource
     def initialize(opts = {})
-      @parser = ScientificNameParser.new
+      @parser = Biodiversity::Parser
       @black_sp = black_species
       @command = "mammal-species"
       @title = "The Mammal Species of The World"
@@ -99,9 +99,9 @@ module DwcaHunter
     # rubocop:enable Metrics/AbcSize
 
     def real_name?(str)
-      parsed = @parser.parse(str)[:scientificName]
+      parsed = @parser.parse(str)
       return false unless parsed[:parsed]
-      epithets = parsed[:canonical].split(" ")[1..-1]
+      epithets = parsed[:canonicalName][:simple].split(" ")[1..-1]
       return false if epithets.nil? || epithets.empty?
       epithets.each do |e|
         return false if @black_sp[e]
