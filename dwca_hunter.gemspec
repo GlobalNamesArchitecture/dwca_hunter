@@ -27,7 +27,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_dependency "biodiversity", "~> 4"
-  gem.add_dependency "dwc-archive", "~> 1.1"
+  gem.add_dependency "dwc-archive", "~> 1.1.1"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
   gem.add_dependency "nokogiri", "~> 1.10"
