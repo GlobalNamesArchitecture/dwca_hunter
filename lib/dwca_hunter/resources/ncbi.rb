@@ -4,7 +4,7 @@ module DwcaHunter
   class ResourceNCBI < DwcaHunter::Resource
     def initialize(opts = {})
       @command = "ncbi"
-      @title = "NCBI"
+      @title = "National Center for Biotechnology Information"
       @url = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
       @uuid = "97d7633b-5f79-4307-a397-3c29402d9311"
       @download_path = File.join(Dir.tmpdir,
