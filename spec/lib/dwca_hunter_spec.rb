@@ -142,7 +142,7 @@ describe DwcaHunter do
   describe ".resources" do
     it "finds registered resources" do
       res = subject.resources
-      expect(res.size).to be == 16
+      expect(res.size).to be == 21
     end
   end
 
