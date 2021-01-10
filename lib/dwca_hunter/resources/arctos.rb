@@ -5,12 +5,12 @@ module DwcaHunter
     def initialize(opts = {})
       @command = "arctos"
       @title = "Arctos"
-      @url = "https://www.dropbox.com/s/3rmny5d8cfm9mmp/arctos.tar.gz?dl=1"
+      @url = "http://arctos.database.museum/cache/gn_merge.tgz"
       @UUID = "eea8315d-a244-4625-859a-226675622312"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
                                  "arctos",
-                                 "data.zip")
+                                 "data.tar.gz")
       @synonyms = []
       @names = []
       @vernaculars = []
@@ -21,8 +21,8 @@ module DwcaHunter
     end
 
     def download
-      puts "Downloading cached verion of the file. Ask Arctos to generate new."
-      `curl -s -L #{@url} -o #{@download_path}`
+      puts "Downloading Arctos file."
+      `curl -s #{@url} -o #{@download_path}`
     end
 
     def unpack
@@ -45,11 +45,11 @@ module DwcaHunter
     end
 
     def collect_vernaculars
-      file = CSV.open(File.join(@download_dir, "common_name.csv"),
+      file = CSV.open(File.join(@download_dir, "globalnames_commonname.csv"),
                       headers: true)
       file.each_with_index do |row, i|
-        canonical = row["SCIENTIFIC_NAME"]
-        vernacular_name_string = row["COMMON_NAME"]
+        canonical = row["scientific_name"]
+        vernacular_name_string = row["common_name"]
 
         if @vernaculars_hash.key?(canonical)
           @vernaculars_hash[canonical] << vernacular_name_string
@@ -57,66 +57,63 @@ module DwcaHunter
           @vernaculars_hash[canonical] = [vernacular_name_string]
         end
 
-        puts "Processed %s vernaculars" % i if i % 10_000 == 0
+        puts "Processed #{i} vernaculars"if (i % 100_000).zero?
       end
     end
 
     def collect_synonyms
-      file = CSV.open(File.join(@download_dir, "relationships.csv"),
+      file = CSV.open(File.join(@download_dir, "globalnames_relationships.csv"),
                       headers: true)
       file.each_with_index do |row, i|
         canonical = row["scientific_name"]
         if @synonyms_hash.key?(canonical)
           @synonyms_hash[canonical] <<
-            { name_string: row["related_name"], status: row["TAXON_RELATIONSHIP"] }
+            { name_string: row["related_name"], status: row["taxon_relationship"] }
         else
           @synonyms_hash[canonical] = [
-            { name_string: row["related_name"], status: row["TAXON_RELATIONSHIP"] }
+            { name_string: row["related_name"], status: row["taxon_relationship"] }
           ]
         end
-        puts "Processed %s synonyms" % i if i % 10_000 == 0
+        puts "Processed #{i} synonyms" if (i % 100_000).zero?
       end
     end
 
     def collect_names
       @names_index = {}
-      file = CSV.open(File.join(@download_dir, "classification.csv"),
+      file = CSV.open(File.join(@download_dir, "globalnames_classification.csv"),
                       headers: true)
+
+      names = {}
       file.each_with_index do |row, i|
-        next unless row["display_name"]
-
-        name_string = row["display_name"].gsub(%r{</?i>}, "")
-        canonical = row["scientific_name"]
-        kingdom = row["kingdom"]
-        phylum = row["phylum"]
-        klass = row["phylclass"]
-        subclass = row["subclass"]
-        order = row["phylorder"]
-        suborder = row["suborder"]
-        superfamily = row["superfamily"]
-        family = row["family"]
-        subfamily = row["subfamily"]
-        tribe = row["tribe"]
-        genus = row["genus"]
-        subgenus = row["subgenus"]
-        species = row["species"]
-        subspecies = row["subspecies"]
-        code = row["nomenclatural_code"]
-
-        taxon_id = "ARCT_#{i + 1}"
-        @names << { taxon_id: taxon_id,
-                    name_string: name_string,
-                    kingdom: kingdom,
-                    phylum: phylum,
-                    klass: klass,
-                    order: order,
-                    family: family,
-                    genus: genus,
-                    code: code }
-
+        next if row["term_type"].nil?
+        name = row["scientific_name"]
+        if names.key?(name)
+          names[name] = names[name].
+            merge({row["term_type"].to_sym => row["term"]})
+        else
+          names[name] = {row["term_type"].to_sym => row["term"]}
+        end
+        puts "Preprocessed #{i} rows" if (i % 100_000).zero?
+      end
+      names.each_with_index do |m, i|
+        canonical = m[0]
+        v = m[1]
+        taxon_id = "gn_#{i + 1}"
+        res ={ taxon_id: taxon_id,
+               name_string: canonical,
+               kingdom: v[:kingdom],
+               phylum: v[:phylum],
+               klass: v[:class],
+               order: v[:order],
+               family: v[:family],
+               genus: v[:genus],
+               species: v[:species],
+               authors: v[:author_text],
+               code: v[:nomenclatural_code] }
+        @names << res
         update_vernacular(taxon_id, canonical)
         update_synonym(taxon_id, canonical)
-        puts "Processed %s names" % i if i % 10_000 == 0
+        puts "Processed #{i} names" if (i % 100_000).zero?
       end
     end
 

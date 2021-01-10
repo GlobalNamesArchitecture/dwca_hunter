@@ -6,7 +6,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "dwca_hunter/version"
 
 Gem::Specification.new do |gem|
-  gem.required_ruby_version = ">= 2.6.6"
+  gem.required_ruby_version = ">= 3.0.0"
   gem.name          = "dwca_hunter"
   gem.version       = DwcaHunter.version
   gem.license       = "MIT"
@@ -26,8 +26,8 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "biodiversity", "~> 4"
-  gem.add_dependency "dwc-archive", "~> 1.1.1"
+  gem.add_dependency "biodiversity", "~> 5.1.2"
+  gem.add_dependency "dwc-archive", "~> 1.1.3"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
   gem.add_dependency "nokogiri", "~> 1.11"

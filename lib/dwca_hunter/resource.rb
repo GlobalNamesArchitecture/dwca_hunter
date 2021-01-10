@@ -13,8 +13,8 @@ module DwcaHunter
     end
 
     def initialize(opts)
-      @needs_download = !(opts[:download] == false)
-      @needs_unpack = !(opts[:unpack] == false)
+      @needs_download = (opts[:download] != false)
+      @needs_unpack = (opts[:unpack] != false)
       @download_dir, @download_file = File.split(@download_path)
       prepare_path if needs_download?
     end
