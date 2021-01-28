@@ -4,7 +4,12 @@ module DwcaHunter
 
     def self.unzip(file, dir = nil)
       Dir.chdir(dir) if dir
-      `unzip -qq -u #{file} > /dev/null 2>&1`
+      Zip::File.open(file) do |zip_file|
+        zip_file.each do |entry|
+          puts "Extracting #{entry.name}"
+          entry.extract
+        end
+      end
     end
 
     def self.gunzip(file, dir = nil)

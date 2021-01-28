@@ -7,6 +7,7 @@ require "dwca_hunter/resource"
 require "fileutils"
 require "htmlentities"
 require "json"
+require "zip"
 require "logger"
 require "net/http"
 require "rest_client"
@@ -53,13 +54,14 @@ module DwcaHunter
     end
 
     def normalize_authors(auth)
-      reg = Regexp.new(/^([\(]?)(.*?)(([\s,\)][^[:upper:]]*)?$)/)
-      auth = auth.gsub(/duPont/, 'du Pont')
+      reg = Regexp.new(/^(\(?)(.*?)(([\s,)][^[:upper:]]*)?$)/)
+      auth = auth.gsub(/duPont/, "du Pont")
       match = reg.match(auth)
       return auth if match.nil?
+
       a1, a2, a3 = match[1..3]
-      a2mod = a2.gsub('&', ',')
-      ary2 = a2mod.split(',').map(&:strip)
+      a2mod = a2.gsub("&", ",")
+      ary2 = a2mod.split(",").map(&:strip)
       a2 = move_initials(ary2) if ary2.size > 1
       "#{a1}#{a2}#{a3}"
     end
@@ -73,8 +75,8 @@ module DwcaHunter
         end
         match = /^([[:upper:]]{1,4})(\sJr)?$/.match(a)
         if !match.nil?
-          initialls = match[1].split('').join('. ')
-          res[-1] = "#{initialls}. #{res[-1]}#{match[2].to_s}"
+          initialls = match[1].split("").join(". ")
+          res[-1] = "#{initialls}. #{res[-1]}#{match[2]}"
         else
           res << a
         end
@@ -83,4 +85,3 @@ module DwcaHunter
     end
   end
 end
-
