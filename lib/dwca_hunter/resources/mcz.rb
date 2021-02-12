@@ -44,7 +44,7 @@ module DwcaHunter
 
     def collect_names
       @names_index = {}
-      file = CSV.open(File.join(@download_dir, "taxonomy_export_2020May26.csv"),
+      file = CSV.open(File.join(@download_dir, "taxonomy_export_2021Feb2.csv"),
                       headers: true)
       file.each_with_index do |row, i|
         canonical = row["SCIENTIFIC_NAME"]
