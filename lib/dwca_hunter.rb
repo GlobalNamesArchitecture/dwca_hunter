@@ -13,6 +13,7 @@ require "net/http"
 require "rest_client"
 require "tmpdir"
 require "uri"
+require "cgi"
 
 Dir[File.join(__dir__, "dwca_hunter", "*.rb")].
   each { |f| require f }

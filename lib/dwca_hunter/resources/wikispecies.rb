@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 module DwcaHunter
+  # Wikispecies source
   class ResourceWikispecies < DwcaHunter::Resource
-    def initialize(opts = {})
+    def initialize(opts = { download: true, unpack: true })
       @wikisp_path = File.join(Dir.tmpdir, "dwca_hunter", "wikispecies")
-      @problems_file = open(File.join(Dir.tmpdir, "problems.txt"), "w:utf-8")
+      @problems_file = File.open(File.join(Dir.tmpdir, "problems.txt"), "w:utf-8")
       @command = "wikispecies"
       @title = "Wikispecies"
       @url = "http://dumps.wikimedia.org/specieswiki/latest/" \
@@ -18,12 +19,13 @@ module DwcaHunter
       @tree = {}
       @paths = {}
       @extensions = []
+      @parser = Biodiversity::Parser
       @re = {
-        page_start: /^\s*\<page\>\s*$/,
-        page_end: %r{^\s*\</page\>\s*$},
+        page_start: /^\s*<page>\s*$/,
+        page_end: %r{^\s*</page>\s*$},
         template: /Template:/i,
-        template_link: /\{\{([^\}]*)\}\}/,
-        vernacular_names: /\{\{\s*VN\s*\|([^\}]+)\}\}/i
+        template_link: /\{\{([^}]*)\}\}/,
+        vernacular_names: /\{\{\s*VN\s*\|([^}]+)\}\}/i
       }
       super(opts)
     end
@@ -39,7 +41,6 @@ module DwcaHunter
 
     def make_dwca
       enrich_data
-      extend_classification
       generate_dwca
     end
 
@@ -62,13 +63,15 @@ module DwcaHunter
           if l.match(@re[:page_end])
             page_on = false
             page_xml = Nokogiri::XML.parse(page)
-            template?(page_xml) ?
-              process_template(page_xml) :
+            if template?(page_xml)
+              process_template(page_xml)
+            else
               process_species(page_xml)
+            end
             page_num += 1
-            if page_num % BATCH_SIZE == 0
+            if (page_num % BATCH_SIZE).zero?
               DwcaHunter.logger_write(object_id,
-                                      "Traversed %s pages" % page_num)
+                                      "Traversed #{page_num} pages")
             end
             page = ""
             @page_title = nil
@@ -79,51 +82,6 @@ module DwcaHunter
       DwcaHunter.logger_write(object_id,
                               "Extracted total %s pages" % page_num)
       f.close
-    end
-
-    def extend_classification
-      DwcaHunter.logger_write(object_id, "Extending classifications")
-      @data.each_with_index do |d, i|
-        unless d[:classificationPath].empty?
-          n = 50
-          while n > 0
-            n -= 1
-            if n == 0
-              d[:classificationPath] = []
-              break
-            end
-            parent = @templates[d[:classificationPath].first]
-            if parent
-              d[:classificationPath].unshift(parent[:parentName])
-            else
-              update_tree(d[:classificationPath])
-              break
-            end
-          end
-        end
-        # d[:classificationPath] = d[:classificationPath].join("|").
-        # gsub("Main Page", "Life")
-        if i % BATCH_SIZE == 0 && i > 0
-          DwcaHunter.logger_write(object_id,
-                                  "Extended %s classifications" % i)
-        end
-      end
-    end
-
-    def update_tree(path)
-      path = path.dup
-      return if @paths.key?(path.join("|"))
-
-      (0...path.size).each do |i|
-        subpath = path[0..i]
-        subpath_string = subpath.join("|")
-        next if @paths.key?(subpath_string)
-
-        name = subpath.pop
-        tree_element = subpath.inject(@tree) { |res, n| res[n] }
-        tree_element[name] = {}
-        @paths[subpath_string] = 1
-      end
     end
 
     def process_template(x)
@@ -161,23 +119,28 @@ module DwcaHunter
         }
         get_full_scientific_name(items)
         get_vernacular_names(items)
-        init_classification_path(items)
       end
     end
 
     def get_full_scientific_name(items)
-      if items["name"]
-        if name = items["name"][0]
-          @data[-1][:scientificName] = parse_name(name, @data[-1])
-        else
-          @problems_file.write("%s\n" % @data[-1][:canonicalForm])
-        end
+      name_ary = items["{{int:name}}"]
+
+      if name_ary.nil? || name_ary.empty?
+        @problems_file.write("%s\n" % @data[-1][:canonicalForm])
+        return
+      end
+
+      name = name_ary[0]
+      name = parse_name(name, @data[-1])
+      if name != ""
+        @data[-1][:scientificName] = name
       end
     end
 
     def get_vernacular_names(items)
-      if items["vernacular names"] && !items["vernacular names"].empty?
-        vn_string = items["vernacular names"].join("")
+      vern = items["{{int:vernacular names}}"]
+      if vern.is_a?(Array) && vern.size.positive?
+        vn_string = vern.join("")
         vn = vn_string.match(@re[:vernacular_names])
         if vn
           vn_list = vn[1].strip.split("|")
@@ -214,8 +177,8 @@ module DwcaHunter
 
     def find_species_components(x)
       items = get_items(x.xpath("//text").text)
-      is_taxon_item = items.key?("name") ||
-                      items.key?("taxonavigation")
+      is_taxon_item = items.key?("{{int:name}}") &&
+                      items.key?("{{int:taxonavigation}}")
       return nil unless is_taxon_item
 
       items
@@ -226,7 +189,7 @@ module DwcaHunter
       items = {}
       current_item = nil
       txt.split("\n").each do |l|
-        item = l.match(/[\=]+([^\=]+)[\=]+/)
+        item = l.match(/=+([^=]+)=+/)
         if item
           current_item = item[1].strip.downcase
           items[current_item] = []
@@ -255,22 +218,25 @@ module DwcaHunter
       old_l = name_string.dup
       name_string.gsub!(/^\*\s*/, "")
       name_string.gsub!(/\[\[([^\]]+\|)?([^\]]*)\]\]/, '\2')
-      name_string.gsub!(/\{\{([^\}]+\|)?([^\}]*)\}\}/, '\2')
-      name_string.gsub!(/[']{2,}/, " ")
-      name_string.gsub!(/["]{2,}/, " ")
-      name_string.gsub!(/\:\s*\d.*$/, "")
+      name_string.gsub!(/\{\{([^}]+\|)?([^}]*)\}\}/, '\2')
+      name_string.gsub!(/'{2,}/, " ")
+      name_string.gsub!(/"{2,}/, " ")
+      name_string.gsub!(/:\s*\d.*$/, "")
       name_string.gsub!(/,\s*\[RSD\]/i, "")
       name_string.gsub!(/^\s*†\s*/, "")
       name_string.gsub!(/(:\s*)?\[http:[^\]]+\]/, "")
       # name_string = DwcaHunter::XML.unescape(name_string)
-      name_string.gsub!(/\<nowiki\>.*$/, "")
-      name_string.gsub!(%r{\<br\s*[/]?\s*\>}, "")
-      name_string.gsub!(/^\s*\&dagger;\s*/, "")
+      name_string.gsub!(/<nowiki>.*$/, "")
+      name_string.gsub!(%r{<br\s*/?\s*>}, "")
+      name_string.gsub!(/^\s*&dagger;\s*/, "")
       name_string.gsub!(/&nbsp;/, " ")
       name_string.gsub!(/\s+/, " ")
-      name_string = name_string.strip
-      # puts "%s---%s" % [name_string, old_l]
-      name_string
+      res = name_string.strip
+      parsed = @parser.parse(res, simple: true)
+      if !["1","2"].include?(parsed[:quality])
+        return ""
+      end
+      res
     end
 
     def generate_dwca
@@ -286,34 +252,35 @@ module DwcaHunter
       count = 0
       @data.map do |d|
         count += 1
-        if count % BATCH_SIZE == 0
+        if (count % BATCH_SIZE).zero?
           DwcaHunter.logger_write(object_id,
                                   "Traversing %s core data record" % count)
         end
         taxon_id = begin
-                     (d[:classificationPath].empty? ?
-                                         d[:taxonId] :
-                                         @templates[d[:classificationPath].
-                                           last][:id])
-                   rescue StandardError
-                     d[:taxonId]
-                   end
+          (if d[:classificationPath].empty?
+             d[:taxonId]
+           else
+             @templates[d[:classificationPath].
+                                           last][:id]
+           end)
+        rescue StandardError
+          d[:taxonId]
+        end
         @taxon_ids[d[:taxonId]] = taxon_id
         parentNameUsageId = begin
-                              (d[:classificationPath].size > 1 ?
-                                                           @templates[d[:classificationPath][-2]][:id] :
-                                                           nil)
-                            rescue StandardError
-                              nil
-                            end
-        url = "http://species.wikimedia.org/wiki/" +
-              URI.encode(d[:canonicalForm].gsub(" ", "_"))
+          (@templates[d[:classificationPath][-2]][:id] if d[:classificationPath].size > 1)
+        rescue StandardError
+          nil
+        end
+        url = "http://species.wikimedia.org/wiki/#{CGI.escape(d[:canonicalForm].gsub(' ', '_'))}"
         path = d[:classificationPath]
         path.pop if path[-1] == d[:canonicalForm]
         canonical_form = d[:canonicalForm].gsub(/\(.*\)\s*$/, "").strip
-        scientific_name = d[:scientificName] == d[:canonicalForm] ?
-                           canonical_form :
-                           d[:scientificName]
+        scientific_name = if d[:scientificName] == d[:canonicalForm]
+                            canonical_form
+                          else
+                            d[:scientificName]
+                          end
         @core << [taxon_id,
                   scientific_name,
                   canonical_form,
@@ -329,7 +296,7 @@ module DwcaHunter
       count = 0
       @data.each do |d|
         count += 1
-        if count % BATCH_SIZE == 0
+        if (count % BATCH_SIZE).zero?
           DwcaHunter.logger_write(object_id,
                                   "Traversing %s extension data record" % count)
         end
