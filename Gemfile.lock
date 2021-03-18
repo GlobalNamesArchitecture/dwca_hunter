@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dwca_hunter (0.7.1)
+    dwca_hunter (0.7.2)
       biodiversity (~> 5.1.2)
       dwc-archive (~> 1.1.3)
       gn_uuid (~> 0.5)
