@@ -51,7 +51,6 @@ class DwcaHunterCLI < Thor
                 resource.abbr =~ /#{search}/i)
   end
 
-  # rubocop:disable Metrics/AbcSize
   def print_table(data)
     table = [data.first.keys.map { |k| k.to_s.capitalize }] + data.map(&:values)
     widths = table_widths(table)
@@ -59,7 +58,6 @@ class DwcaHunterCLI < Thor
     format = widths.collect { |n| "%-#{n}s" }.join("  ")
     table.each { |line| printf "  #{format}  \n", *line }
   end
-  # rubocop:enable Metrics/AbcSize
 
   def table_widths(table)
     table.each_with_object([]) do |line, widths|
