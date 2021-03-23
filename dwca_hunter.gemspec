@@ -26,8 +26,8 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "biodiversity", "~> 5.1.2"
-  gem.add_dependency "dwc-archive", "~> 1.1.3"
+  gem.add_dependency "biodiversity", "~> 5.2.0"
+  gem.add_dependency "dwc-archive", "~> 1.1.4"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
   gem.add_dependency "nokogiri", "~> 1.11"
