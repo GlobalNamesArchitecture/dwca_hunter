@@ -5,7 +5,7 @@ module DwcaHunter
   class ResourceFishbase < DwcaHunter::Resource
     attr_reader :title, :abbr
 
-    def initialize(opts = { download: false })
+    def initialize(opts = { download: true })
       @command = "plazi"
       @title = "PLAZI treatments"
       @url = "http://tb.plazi.org/GgServer/xml.rss.xml"
