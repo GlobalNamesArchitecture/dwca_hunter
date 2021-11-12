@@ -6,7 +6,7 @@ PATH
       dwc-archive (~> 1.1.6)
       gn_uuid (~> 0.5)
       htmlentities (~> 4.3)
-      nokogiri (~> 1.11)
+      nokogiri (~> 1.12)
       rest-client (~> 2.1)
       ruby-xz (~> 1.0)
       rubyzip (~> 2.3)

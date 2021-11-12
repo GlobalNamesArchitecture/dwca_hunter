@@ -30,7 +30,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "dwc-archive", "~> 1.1.6"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
-  gem.add_dependency "nokogiri", "~> 1.11"
+  gem.add_dependency "nokogiri", "~> 1.12"
   gem.add_dependency "rest-client", "~> 2.1"
   gem.add_dependency "ruby-xz", "~> 1.0"
   gem.add_dependency "rubyzip", "~> 2.3"
