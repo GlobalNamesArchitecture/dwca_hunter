@@ -5,7 +5,7 @@ module DwcaHunter
     def initialize(opts = {})
       @command = 'ioc-world-bird'
       @title = 'IOC World Bird List'
-      @url = 'https://uofi.box.com/shared/static/znsd734a78saq87hes979p5uspgkzy93.csv'
+      @url = 'https://uofi.box.com/shared/static/towpfov7p1txekpdtutndyagpddd8v1t.csv'
       @UUID = '6421ffec-38e3-40fb-a6d9-af27238a47a1'
       @download_path = File.join(Dir.tmpdir,
                                  'dwca_hunter',

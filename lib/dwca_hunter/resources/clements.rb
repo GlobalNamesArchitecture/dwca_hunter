@@ -5,7 +5,7 @@ module DwcaHunter
     def initialize(opts = {})
       @command = "clements-ebird"
       @title = "The eBird/Clements Checklist of Birds of the World"
-      @url = "https://uofi.box.com/shared/static/b4n8zqa99hq9rdga27skkh3870yhujgo.csv"
+      @url = "https://uofi.box.com/shared/static/o3ekrurtw09025fc1z045auauga5x68y.csv"
       @UUID = "577c0b56-4a3c-4314-8724-14b304f601de"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
@@ -24,6 +24,7 @@ module DwcaHunter
       puts "Downloading cached and modified version of the file."
       puts "Go to https://www.birds.cornell.edu/clementschecklist/download/ " \
         "for updates."
+      puts "Download Excel version and convert with LibreOffice to csv."
       `curl -s -L #{@url} -o #{@download_path}`
     end
 
