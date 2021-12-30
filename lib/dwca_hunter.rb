@@ -3,6 +3,7 @@
 require "base64"
 require "biodiversity"
 require "dwc_archive"
+require "gn_uuid"
 require "dwca_hunter/resource"
 require "fileutils"
 require "htmlentities"

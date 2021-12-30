@@ -1,0 +1,148 @@
+# frozen_string_literal: true
+
+module DwcaHunter
+  class ResourceLeipzigPlantCat < DwcaHunter::Resource
+    def initialize(opts = { download: true })
+      @parser = Biodiversity::Parser
+      @command = "lcvp"
+      @title = "The Leipzig Catalogue of Vascular Plants"
+      @url = "https://github.com/idiv-biodiversity/LCVP/raw/master/raw_data_LCVP/LCVP_104.zip"
+      @UUID = "75fb6846-4c37-4b45-a2ab-05dc0124957b"
+      @download_dir = File.join(Dir.tmpdir, "dwca_hunter", "lcvp")
+      @download_path = File.join(@download_dir, "data.zip")
+      @synonyms = []
+      @names = []
+      @vernaculars = []
+      @extensions = []
+      @synonyms_hash = {}
+      @vernaculars_hash = {}
+      super(opts)
+    end
+
+    def download
+      puts("Check for newer version at https://github.com/idiv-biodiversity/LCVP")
+      DwcaHunter.logger_write(object_id, "Downloading")
+      `curl -s -L #{@url} -o #{@download_path}`
+    end
+
+    def unpack
+      unpack_zip
+    end
+
+    def make_dwca
+      DwcaHunter.logger_write(object_id, "Extracting data")
+      get_names
+      generate_dwca
+    end
+
+    private
+
+    def get_names
+      Dir.chdir(@download_dir)
+      collect_names
+    end
+
+    def find_csv_file
+      Dir.chdir(@download_dir)
+      Dir.entries(".").each do |f|
+        return f if f[-4..-1] == ".txt"
+      end
+    end
+
+    def gnid(str)
+      "gn-#{GnUUID.uuid(str)[0..13]}"
+    end
+
+    def collect_names
+      @names_index = {}
+      latin1 = File.read(File.join(@download_dir, find_csv_file))
+      w = File.open(File.join(@download_dir, "data.tsv"), "w:utf-8")
+      w.write(latin1.force_encoding("cp-1252").encode("UTF-8"))
+      file = CSV.open(File.join(@download_dir, data.tsv),
+                      headers: true, col_sep: "\t", quote_char: "щ")
+      file.each do |row|
+        name_string = row["Input Taxon"].to_s.strip
+        taxon_id = gnid(name_string)
+        domain = "Plantae"
+        phylum = "Tracheophyta"
+        order = row["Order"]
+        family = row["Family"].to_s.strip
+        accepted_name = row["Output Taxon"].to_s.strip
+        accepted_id = gnid(accepted_name)
+        taxonomic_status = row["Status"].to_s.strip
+
+        @names << {
+          taxon_id: taxon_id,
+          domain: domain,
+          phylum: phylum,
+          order: order,
+          family: family,
+          current_id: accepted_id,
+          name_string: name_string,
+          taxonomic_status: taxonomic_status,
+          nom_code: "ICN"
+        }
+      end
+    end
+
+    def generate_dwca
+      DwcaHunter.logger_write(object_id, "Creating DarwinCore Archive file")
+      @core = [["http://rs.tdwg.org/dwc/terms/taxonID",
+                "http://rs.tdwg.org/dwc/terms/scientificName",
+                "http://rs.tdwg.org/dwc/terms/acceptedNameUsageID",
+                "http://rs.tdwg.org/dwc/terms/domain",
+                "http://rs.tdwg.org/dwc/terms/phylum",
+                "http://rs.tdwg.org/dwc/terms/order",
+                "http://rs.tdwg.org/dwc/terms/family",
+                "http://rs.tdwg.org/dwc/terms/taxonRank",
+                "http://rs.tdwg.org/dwc/terms/taxonomicStatus",
+                "http://rs.tdwg.org/dwc/terms/nomenclaturalCode"]]
+      @names.each do |n|
+        @core << [n[:taxon_id], n[:name_string], n[:current_id],
+                  n[:domain], n[:phylum], n[:family],
+                  n[:genus], n[:rank], n[:taxonomic_status], n[:nom_code]]
+      end
+
+      @eml = {
+        id: @uuid,
+        title: @title,
+        authors: [
+          {
+            first_name: "Rafaël",
+            last_name: "Govaerts"
+          },
+          {
+            first_name: "Eimear",
+            middle_name: "Nic",
+            last_name: "Lughadha"
+          },
+          {
+            first_name: "Nicholas",
+            last_name: "Black"
+          },
+          {
+            first_name: "Robert",
+            last_name: "Turner"
+          },
+          {
+            first_name: "Alan",
+            last_name: "Paton"
+          }
+        ],
+        metadata_providers: [
+          { first_name: "Dmitry",
+            last_name: "Mozzherin",
+            email: "dmozzherin@gmail.com" }
+        ],
+        abstract: "The World Checklist of Vascular Plants (WCVP) " \
+                  "is a comprehensive list of scientifically described " \
+                  "plant species, compiled over four decades, " \
+                  "from peer-reviewed literature, authoritative " \
+                  "scientific databases, herbaria and observations, " \
+                  "then reviewed by experts.",
+        url: "https://wcvp.science.kew.org"
+      }
+      super
+    end
+  end
+end
