@@ -8,7 +8,7 @@ module DwcaHunter
       @problems_file = File.open(File.join(Dir.tmpdir, "problems.txt"), "w:utf-8")
       @command = "wikispecies"
       @title = "Wikispecies"
-      @url = "http://dumps.wikimedia.org/specieswiki/latest/" \
+      @url = "https://dumps.wikimedia.org/specieswiki/latest/" \
              "specieswiki-latest-pages-articles.xml.bz2"
       @url = opts[:url] if opts[:url]
       @uuid = "68923690-0727-473c-b7c5-2ae9e601e3fd"
@@ -109,17 +109,17 @@ module DwcaHunter
       return if page_title(x).match(/Wikispecies/i)
 
       items = find_species_components(x)
-      if items
-        @data << {
-          taxonId: page_id(x),
-          canonicalForm: page_title(x),
-          scientificName: page_title(x),
-          classificationPath: [],
-          vernacularNames: []
-        }
-        get_full_scientific_name(items)
-        get_vernacular_names(items)
-      end
+      return unless items
+
+      @data << {
+        taxonId: page_id(x),
+        canonicalForm: page_title(x),
+        scientificName: page_title(x),
+        classificationPath: [],
+        vernacularNames: []
+      }
+      get_full_scientific_name(items)
+      get_vernacular_names(items)
     end
 
     def get_full_scientific_name(items)
@@ -132,32 +132,32 @@ module DwcaHunter
 
       name = name_ary[0]
       name = parse_name(name, @data[-1])
-      if name != ""
-        @data[-1][:scientificName] = name
-      end
+      return unless name != ""
+
+      @data[-1][:scientificName] = name
     end
 
     def get_vernacular_names(items)
       vern = items["{{int:vernacular names}}"]
-      if vern.is_a?(Array) && vern.size.positive?
-        vn_string = vern.join("")
-        vn = vn_string.match(@re[:vernacular_names])
-        if vn
-          vn_list = vn[1].strip.split("|")
-          vnames = []
-          vn_list.each do |item|
-            language, name = item.split("=").map(&:strip)
-            next unless language && name && language.size < 4 && name.valid_encoding?
+      return unless vern.is_a?(Array) && vern.size.positive?
 
-            vnames << {
-              name: name,
-              language: language
-            }
-          end
+      vn_string = vern.join("")
+      vn = vn_string.match(@re[:vernacular_names])
+      return unless vn
 
-          @data[-1][:vernacularNames] = vnames
-        end
+      vn_list = vn[1].strip.split("|")
+      vnames = []
+      vn_list.each do |item|
+        language, name = item.split("=").map(&:strip)
+        next unless language && name && language.size < 4 && name.valid_encoding?
+
+        vnames << {
+          name: name,
+          language: language
+        }
       end
+
+      @data[-1][:vernacularNames] = vnames
     end
 
     def init_classification_path(items)
@@ -233,9 +233,8 @@ module DwcaHunter
       name_string.gsub!(/\s+/, " ")
       res = name_string.strip
       parsed = @parser.parse(res, simple: true)
-      if !["1","2"].include?(parsed[:quality])
-        return ""
-      end
+      return "" unless %w[1 2].include?(parsed[:quality])
+
       res
     end
 

@@ -5,7 +5,9 @@ module DwcaHunter
     def initialize(opts = {})
       @command = "arctos"
       @title = "Arctos"
-      @url = "http://arctos.database.museum/cache/gn_merge.tgz.zip"
+      # @url = "http://arctos.database.museum/cache/gn_merge.tgz.zip"
+      # see issue https://github.com/ArctosDB/arctos/issues/5709
+      @url = "https://arctos.database.museum/cache/gn_merge.tgz"
       @UUID = "eea8315d-a244-4625-859a-226675622312"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
@@ -22,7 +24,7 @@ module DwcaHunter
 
     def download
       puts "Downloading Arctos file."
-      `curl -s #{@url} -o #{@download_path}`
+      `curl -L -s #{@url} -o #{@download_path}`
     end
 
     def unpack
@@ -57,7 +59,7 @@ module DwcaHunter
           @vernaculars_hash[canonical] = [vernacular_name_string]
         end
 
-        puts "Processed #{i} vernaculars"if (i % 100_000).zero?
+        puts "Processed #{i} vernaculars" if (i % 100_000).zero?
       end
     end
 
@@ -86,30 +88,31 @@ module DwcaHunter
       names = {}
       file.each_with_index do |row, i|
         next if row["term_type"].nil?
+
         name = row["scientific_name"]
-        if names.key?(name)
-          names[name] = names[name].
-            merge({row["term_type"].to_sym => row["term"]})
-        else
-          names[name] = {row["term_type"].to_sym => row["term"]}
-        end
+        names[name] = if names.key?(name)
+                        names[name].
+                          merge({ row["term_type"].to_sym => row["term"] })
+                      else
+                        { row["term_type"].to_sym => row["term"] }
+                      end
         puts "Preprocessed #{i} rows" if (i % 100_000).zero?
       end
       names.each_with_index do |m, i|
         canonical = m[0]
         v = m[1]
         taxon_id = "gn_#{i + 1}"
-        res ={ taxon_id: taxon_id,
-               name_string: canonical,
-               kingdom: v[:kingdom],
-               phylum: v[:phylum],
-               klass: v[:class],
-               order: v[:order],
-               family: v[:family],
-               genus: v[:genus],
-               species: v[:species],
-               authors: v[:author_text],
-               code: v[:nomenclatural_code] }
+        res = { taxon_id: taxon_id,
+                name_string: canonical,
+                kingdom: v[:kingdom],
+                phylum: v[:phylum],
+                klass: v[:class],
+                order: v[:order],
+                family: v[:family],
+                genus: v[:genus],
+                species: v[:species],
+                authors: v[:author_text],
+                code: v[:nomenclatural_code] }
         @names << res
         update_vernacular(taxon_id, canonical)
         update_synonym(taxon_id, canonical)
