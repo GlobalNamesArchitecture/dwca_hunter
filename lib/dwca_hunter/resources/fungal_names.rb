@@ -65,7 +65,7 @@ module DwcaHunter
     def collect_names
       @names_index = {}
       file = CSV.open(File.join(@download_dir, "data.tsv"),
-                      headers: true, col_sep: "\t", quote_char: "щ")
+                      headers: true, col_sep: "\t", quote_char: "\b")
       file.each_with_index do |row, i|
         taxon_id = row["Registration identifier"]
         next if taxon_id.nil?

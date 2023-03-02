@@ -61,7 +61,7 @@ module DwcaHunter
       w.write(latin1.force_encoding("iso-8859-1").encode("UTF-8"))
       w.close
       file = CSV.open(File.join(@download_dir, "data.tsv"),
-                      headers: true, col_sep: "\t", quote_char: "щ")
+                      headers: true, col_sep: "\t", quote_char: "\b")
       file.each do |row|
         name_string = row["Input Taxon"].to_s.strip
         taxon_id = gnid(name_string)
@@ -89,10 +89,10 @@ module DwcaHunter
           nom_code: "ICN"
         }
       end
-      add_missing()
+      add_missing
     end
 
-    def add_missing()
+    def add_missing
       names = []
       @names.each do |n|
         next if @ids.key?(n[:current_id])

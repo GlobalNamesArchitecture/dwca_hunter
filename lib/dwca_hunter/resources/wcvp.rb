@@ -52,7 +52,7 @@ module DwcaHunter
     def assemble_synonym(row)
       name = row["originalNameCombination"].gsub("_", " ")
       auth = "#{row['authoritySpeciesAuthor']} #{row['aurhoritySpeciesYear']}".
-        strip
+             strip
       name = "#{name} #{auth}".strip
       { taxon_id: row["id"], name_string: name, status: "synonym" }
     end
@@ -76,9 +76,7 @@ module DwcaHunter
       res = ""
       parsed = @parser.parse(name_string)
       if parsed[:parsed]
-        if parsed[:cardinality] == 2
-          return "species"
-        end
+        return "species" if parsed[:cardinality] == 2
 
         canonical = parsed[:canonical][:full]
         if !canonical.index(" subsp.").nil?
@@ -89,9 +87,7 @@ module DwcaHunter
           return "variety"
         end
 
-        if parsed[:quality] != 1
-          puts name_string
-        end
+        puts name_string if parsed[:quality] != 1
       end
       res
     end
@@ -99,7 +95,7 @@ module DwcaHunter
     def collect_names
       @names_index = {}
       file = CSV.open(File.join(@download_dir, find_csv_file),
-                      headers: true, col_sep: "|", quote_char: "щ")
+                      headers: true, col_sep: "|", quote_char: "\b")
       file.each do |row|
         taxon_id = row["kew_id"]
         domain = "Plantae"

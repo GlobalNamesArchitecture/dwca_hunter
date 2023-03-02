@@ -40,7 +40,7 @@ module DwcaHunter
 
     def collect_names
       file = CSV.open(File.join(@download_dir, "ion.tsv"),
-                      headers: true, col_sep: "\t", quote_char: "щ")
+                      headers: true, col_sep: "\t", quote_char: "\b")
       file.each_with_index do |row, i|
         id = row["id"]
         name_string = row["nameComplete"]
