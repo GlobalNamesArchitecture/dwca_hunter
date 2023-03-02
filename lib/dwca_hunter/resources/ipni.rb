@@ -4,7 +4,8 @@ module DwcaHunter
   # Resource for FishBase
   class ResourceIPNI < DwcaHunter::Resource
     attr_reader :title, :abbr
-    def initialize(opts = {}) #download: false, unpack: false})
+
+    def initialize(opts = {}) # download: false, unpack: false})
       @command = "ipni"
       @title = "The International Plant Names Index"
       @abbr = "IPNI"
@@ -18,14 +19,14 @@ module DwcaHunter
 
     def unpack
       puts "Unpacking #{@download_path}"
-      XZ.decompress_file(@download_path, @download_path[0...-3] )
+      XZ.decompress_file(@download_path, @download_path[0...-3])
     end
 
     def download
       puts "Download by hand from"
       puts "https://storage.cloud.google.com/ipni-data/ipniWebName.csv.xz"
       puts "and copy to given url"
-        `curl -s -L #{@url} -o #{@download_path}`
+      `curl -s -L #{@url} -o #{@download_path}`
     end
 
     def make_dwca
@@ -36,39 +37,35 @@ module DwcaHunter
     private
 
     def organize_data
-      DwcaHunter::logger_write(self.object_id,
-                               "Organizing data")
+      DwcaHunter.logger_write(object_id,
+                              "Organizing data")
       # snp = ScientificNameParser.new
       @data = CSV.open(@download_path[0...-3],
-         col_sep: "|", quote_char: "щ", headers: true)
-        .each_with_object([]) do |row, data|
-        name = row['taxon_scientific_name_s_lower'].strip
-        au = row['authors_t'].to_s.strip
-        name = "#{name} #{au}" if au != ''
+                       col_sep: "|", quote_char: "\b", headers: true).
+              each_with_object([]) do |row, data|
+        name = row["taxon_scientific_name_s_lower"].strip
+        au = row["authors_t"].to_s.strip
+        name = "#{name} #{au}" if au != ""
         id = row["id"].split(":")[-1]
         data << { taxon_id: id,
                   local_id: id,
                   family: row["family_s_lower"],
                   genus: row["genus_s_lower"],
                   scientific_name: name,
-                  rank: row["rank_s_alphanum"]
-                }
-
+                  rank: row["rank_s_alphanum"] }
       end
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id,
-                               'Creating DarwinCore Archive file')
+      DwcaHunter.logger_write(object_id,
+                              "Creating DarwinCore Archive file")
       core_init
       eml_init
-      DwcaHunter::logger_write(self.object_id, 'Assembling Core Data')
+      DwcaHunter.logger_write(object_id, "Assembling Core Data")
       count = 0
       @data.each do |d|
         count += 1
-        if count % 10000 == 0
-          DwcaHunter::logger_write(self.object_id, "Core row #{count}")
-        end
+        DwcaHunter.logger_write(object_id, "Core row #{count}") if count % 10_000 == 0
         @core << [d[:taxon_id], d[:local_id],
                   d[:scientific_name], d[:rank],
                   d[:family], d[:genus]]
@@ -83,9 +80,8 @@ module DwcaHunter
         authors: [],
         metadata_providers: [
           { first_name: "Dmitry",
-            last_name: "Mozzherin",
-          }
-      ],
+            last_name: "Mozzherin" }
+        ],
         abstract: "The International Plant Names Index (IPNI) is a database " \
                   "of the names and associated basic bibliographical " \
                   "details of seed plants, ferns and lycophytes. Its goal " \
