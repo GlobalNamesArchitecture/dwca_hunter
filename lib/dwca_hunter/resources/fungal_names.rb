@@ -8,7 +8,7 @@ module DwcaHunter
       # Download from https://nmdc.cn/fungalnames/released
       # LibreOffice, save csv file, upload it to box.com
       @url = "https://uofi.box.com/shared/static/g5lmbwj799wnh5vug6kqijttxt91x9dm.txt"
-      @UUID = "b0ac4f6f-fc56-41b4-ad69-6af30a881e7e"
+      @UUID = "4b373ccd-2f47-4c43-81c3-c2402360fd43"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
                                  "fungal-names",
