@@ -5,7 +5,7 @@ module DwcaHunter
     def initialize(opts = {})
       @command = "mcz"
       @title = "MCZbase"
-      @url = "https://uofi.box.com/shared/static/x1dp86l48hyjkwfl106ejj25ormkzwip.gz"
+      @url = "https://uofi.box.com/shared/static/cdupnudo5usgbcjeds83fw2884jg9n5j.gz"
       @UUID = "c79d055b-211b-40de-8e27-618011656265"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
@@ -44,7 +44,7 @@ module DwcaHunter
 
     def collect_names
       @names_index = {}
-      file = CSV.open(File.join(@download_dir, "taxonomy_export_2021Feb2.csv"),
+      file = CSV.open(File.join(@download_dir, "taxonomy_export_2023Mar6.csv"),
                       headers: true)
       file.each_with_index do |row, i|
         canonical = row["SCIENTIFIC_NAME"]
