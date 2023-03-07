@@ -73,9 +73,9 @@ module DwcaHunter
             email: "nigel.robinson@thomsonreuters.com" }
         ],
         metadata_providers: [
-          { first_name: "Dmitry",
-            last_name: "Mozzherin",
-            email: "dmozzherin@gmail.com" }
+          { first_name: "Roderic",
+            last_name: "Page",
+            email: "rdmpage@gmail.com" }
         ],
         abstract: "ION contains millions of animal names, both fossil and " \
           "recent, at all taxonomic ranks, reported from the scientific " \
