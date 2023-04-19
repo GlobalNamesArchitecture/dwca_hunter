@@ -5,7 +5,7 @@ module DwcaHunter
     def initialize(opts = {})
       @command = "index-fungorum"
       @title = "Index Fungorum (Species Fungorum)"
-      @url = "https://uofi.box.com/shared/static/54l3b7h4q4pwqq4fgqvx42h3d328fl1c.csv"
+      @url = "https://uofi.box.com/shared/static/rtfpkmfcuihwyryot8ur4fiad5jkkz8u.csv"
       @UUID = "af06816a-0b28-4a09-8219-bd1d63289858"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
