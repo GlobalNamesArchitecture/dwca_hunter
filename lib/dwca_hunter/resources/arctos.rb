@@ -24,7 +24,9 @@ module DwcaHunter
 
     def download
       puts "Downloading Arctos file."
-      `curl -L -s #{@url} -o #{@download_path}`
+      # -k ignores certificates
+      # -L allows redirections
+      `curl -L -k -s #{@url} -o #{@download_path}`
     end
 
     def unpack

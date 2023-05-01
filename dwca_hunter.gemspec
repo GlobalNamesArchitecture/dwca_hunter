@@ -26,8 +26,8 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "biodiversity", "~> 5.5.2"
-  gem.add_dependency "dwc-archive", "~> 1.1.6"
+  gem.add_dependency "biodiversity", "~> 5.7.2"
+  gem.add_dependency "dwc-archive", "~> 1.1.7"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
   gem.add_dependency "nokogiri", "~> 1.14"
@@ -41,6 +41,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "coveralls", "~> 0.8"
   gem.add_development_dependency "rake", "~> 13.0"
   gem.add_development_dependency "rspec", "~> 3.12"
-  gem.add_development_dependency "rubocop", "~> 1.46"
-  gem.add_development_dependency "solargraph", "~> 0.48"
+  gem.add_development_dependency "rubocop", "~> 1.50"
+  gem.add_development_dependency "solargraph", "~> 0.49"
 end
