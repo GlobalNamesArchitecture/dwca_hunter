@@ -4,7 +4,7 @@ module DwcaHunter
   class ResourceSherborn < DwcaHunter::Resource
     def initialize(opts = {})
       @command = "sherborn"
-      @title = "Index Animalium"
+      @title = "Index Animalium by Charles Davies Sherborn"
       @url = "https://uofi.box.com/shared/static/kj8a26a3bcrraa4kccoyz5jr5uqrqoe6.csv"
       @UUID = "05ad6ca2-fc37-47f4-983a-72e535420e28"
       @download_path = File.join(Dir.tmpdir,
