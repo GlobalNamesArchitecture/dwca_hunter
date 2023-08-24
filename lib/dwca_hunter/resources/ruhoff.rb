@@ -69,7 +69,6 @@ module DwcaHunter
 
         @names << {
           taxon_id: taxon_id,
-          phylum: phylum,
           kingdom: kingdom,
           phylum: phylum,
           name_string: name_string,
