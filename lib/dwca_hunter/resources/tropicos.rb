@@ -43,11 +43,11 @@ module DwcaHunter
     end
 
     def assemble_synonym(row)
-      name = row["originalNameCombination"].gsub("_", " ")
+      ggenus = row["originalNameCombination"].gsub("_", " ")
       auth = "#{row['authoritySpeciesAuthor']} #{row['aurhoritySpeciesYear']}".
         strip
-      name = "#{name} #{auth}".strip
-      { taxon_id: row["id"], name_string: name, status: "synonym" }
+      genus = "#{genus} #{auth}".strip
+      { taxon_id: row["id"], name_string: genus, status: "synonym" }
     end
 
     def collect_names
@@ -55,7 +55,7 @@ module DwcaHunter
       file = CSV.open(@download_path, headers: true)
       file.each do |row|
         id = row["NameID"]
-        name = row["FullNameWithAuthors"]
+        ggenus = row["FullNameWithAuthors"]
         parent_id = row["NHTID"]
         status = row["NomenclatureStatusName"]
         rank = row["RankName"]
@@ -63,7 +63,7 @@ module DwcaHunter
         @names << {
           taxon_id: id,
           parentNameUsageId: parent_id,
-          name_string: name,
+          name_string: genus,
           rank: rank,
           nomenclaturalStatus: status,
           nom_code: "ICN"
