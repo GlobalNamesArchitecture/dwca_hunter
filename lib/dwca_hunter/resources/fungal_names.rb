@@ -6,8 +6,8 @@ module DwcaHunter
       @command = "fungal-names"
       @title = "Fungal Names"
       # Download from https://nmdc.cn/fungalnames/released
-      # LibreOffice, save csv file, upload it to box.com
-      @url = "https://uofi.box.com/shared/static/g5lmbwj799wnh5vug6kqijttxt91x9dm.txt"
+      # upload it to box.com, update link
+      @url = "https://uofi.box.com/shared/static/zcppi7n613hx9smhbbq45bfuhwao96tx.txt"
       @UUID = "4b373ccd-2f47-4c43-81c3-c2402360fd43"
       @download_path = File.join(Dir.tmpdir,
                                  "dwca_hunter",
@@ -76,7 +76,7 @@ module DwcaHunter
         name_string = row["Fungal name"].strip
         authors = row["Authors"]
         year = row["Year of publication"]
-        rank = row["Rank"].strip.downcase
+        rank = row["Rank"].to_s.strip.downcase
         status = row["Name status"]
         status = status.nil? ? "" : status.strip.downcase
         status = "synonym" if status == "synonymy"
