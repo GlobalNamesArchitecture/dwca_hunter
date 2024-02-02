@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module DwcaHunter
-  # Resource for FishBase
-  class ResourceFishbase < DwcaHunter::Resource
+  # Resource for PLAZI
+  class ResourcePLAZI < DwcaHunter::Resource
     attr_reader :title, :abbr
 
     def initialize(opts = { download: true })

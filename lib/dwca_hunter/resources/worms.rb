@@ -3,7 +3,7 @@
 # rubocop:disable all
 module DwcaHunter
   class ResourceWoRMS < DwcaHunter::Resource
-    def initialize() # opts = { download: false, unpack: false })
+    def initialize(opts = {}) # opts = { download: false, unpack: false })
       @command = "worms"
       @title = "World Register of Marine Species"
       # Download using sf33 machine
