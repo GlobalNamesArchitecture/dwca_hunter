@@ -6,7 +6,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "dwca_hunter/version"
 
 Gem::Specification.new do |gem|
-  gem.required_ruby_version = ">= 3.0.0"
+  gem.required_ruby_version = ">= 3.3.0"
   gem.name          = "dwca_hunter"
   gem.version       = DwcaHunter.version
   gem.license       = "MIT"
@@ -26,21 +26,23 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "biodiversity", "~> 5.7.2"
+  gem.add_dependency "biodiversity", "~> 5.7"
   gem.add_dependency "dwc-archive", "~> 1.1.7"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
-  gem.add_dependency "nokogiri", "~> 1.14"
+  gem.add_dependency "nokogiri", "~> 1.16"
   gem.add_dependency "rest-client", "~> 2.1"
   gem.add_dependency "ruby-xz", "~> 1.0"
   gem.add_dependency "rubyzip", "~> 2.3"
-  gem.add_dependency "thor", "~> 1.2"
+  gem.add_dependency "thor", "~> 1.3"
 
-  gem.add_development_dependency "bundler", "~> 2.4"
-  gem.add_development_dependency "byebug", "~> 11.1"
-  gem.add_development_dependency "coveralls", "~> 0.8"
-  gem.add_development_dependency "rake", "~> 13.0"
-  gem.add_development_dependency "rspec", "~> 3.12"
-  gem.add_development_dependency "rubocop", "~> 1.50"
-  gem.add_development_dependency "solargraph", "~> 0.49"
+  gem.add_development_dependency "bundler", "~> 2.5"
+  gem.add_development_dependency "json", "~> 2.7.2"
+
+  # gem.add_development_dependency "byebug", "~> 11.1"
+  # gem.add_development_dependency "coveralls", "~> 0.8"
+  gem.add_development_dependency "rake", "~> 13.2"
+  gem.add_development_dependency "rspec", "~> 3.13"
+  gem.add_development_dependency "rubocop", "~> 1.66"
+                    gem.add_development_dependency "ruby-lsp", "~> 0.17"
 end
