@@ -9,8 +9,7 @@ module DwcaHunter
       @command = "ipni"
       @title = "The International Plant Names Index"
       @abbr = "IPNI"
-      #@url = "https://uofi.box.com/shared/static/s0x4xjonxt54pi89n543gdmttrdqd6iv.xz"
-      @url= "https://storage.cloud.google.com/ipni-data/ipniWebName.csv.xz"
+      @url = "https://uofi.box.com/shared/static/s0x4xjonxt54pi89n543gdmttrdqd6iv.xz"
       @uuid = "6b3905ce-5025-49f3-9697-ddd5bdfb4ff0"
       @download_path = File.join(Dir.tmpdir, "dwca_hunter", "ipni",
                                  "ipni.csv.xz")
