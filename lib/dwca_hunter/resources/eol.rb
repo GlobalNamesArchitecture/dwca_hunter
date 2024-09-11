@@ -8,7 +8,7 @@ module DwcaHunter
       @command = "eol"
       @title = "Encyclopedia of Life"
       @abbr = "EOL"
-      @url = "https://eol.org/data/provider_ids.csv.gz"
+      @url = "https://eol.org/data/full_provider_ids.csv.gz"
       @uuid = "dba5f880-a40d-479b-a1ad-a646835edde4"
       @download_dir = File.join(Dir.tmpdir, "dwca_hunter", "eol")
       @download_path = File.join(@download_dir, "eol.csv.gz")
