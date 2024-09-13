@@ -4,7 +4,8 @@ module DwcaHunter
   # Resource for FishBase
   class ResourceEOL < DwcaHunter::Resource
     attr_reader :title, :abbr
-    def initialize(opts = {}) #download: false, unpack: false})
+
+    def initialize(opts = {}) # download: false, unpack: false})
       @command = "eol"
       @title = "Encyclopedia of Life"
       @abbr = "EOL"
@@ -28,32 +29,38 @@ module DwcaHunter
     private
 
     def organize_data
-      DwcaHunter::logger_write(self.object_id,
-                               "Organizing data")
+      uniq = {}
+      DwcaHunter.logger_write(object_id,
+                              "Organizing data")
+      count = 0
       # snp = ScientificNameParser.new
       @data = CSV.open(@download_path[0...-3],
-         col_sep: ",", headers: true)
-        .each_with_object([]) do |row, data|
-        id = row['page_id'].strip
-        name = row['preferred_canonical_for_page'].strip
+                       col_sep: ",", headers: true).
+              each_with_object([]) do |row, data|
+        count += 1
+        DwcaHunter.logger_write(object_id, "Raw file row #{count}") if (count % 1_000_000).zero?
+        id = row["page_id"].strip
+        name = row["preferred_canonical_for_page"].strip
+        k = "#{id}|#{name}"
+        next if uniq.key?(k)
+
         data << { taxon_id: id,
                   local_id: id,
-                  scientific_name: name}
+                  scientific_name: name }
+        uniq[k] = true
       end
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id,
-                               'Creating DarwinCore Archive file')
+      DwcaHunter.logger_write(object_id,
+                              "Creating DarwinCore Archive file")
       core_init
       eml_init
-      DwcaHunter::logger_write(self.object_id, 'Assembling Core Data')
+      DwcaHunter.logger_write(object_id, "Assembling Core Data")
       count = 0
       @data.each do |d|
         count += 1
-        if count % 10000 == 0
-          DwcaHunter::logger_write(self.object_id, "Core row #{count}")
-        end
+        DwcaHunter.logger_write(object_id, "Core row #{count}") if (count % 1_000_000).zero?
         @core << [d[:taxon_id], d[:local_id],
                   d[:scientific_name]]
       end
@@ -67,9 +74,8 @@ module DwcaHunter
         authors: [],
         metadata_providers: [
           { first_name: "Dmitry",
-            last_name: "Mozzherin",
-          }
-      ],
+            last_name: "Mozzherin" }
+        ],
         abstract: "Global access to knowledge about life on Earth",
         url: "http://www.eol.org"
       }
@@ -78,8 +84,7 @@ module DwcaHunter
     def core_init
       @core = [["http://rs.tdwg.org/dwc/terms/taxonID",
                 "http://globalnames.org/terms/localID",
-                "http://rs.tdwg.org/dwc/terms/scientificName",
-                ]]
+                "http://rs.tdwg.org/dwc/terms/scientificName"]]
     end
   end
 end

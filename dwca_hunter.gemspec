@@ -26,11 +26,15 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "biodiversity", "~> 5.7"
-  gem.add_dependency "dwc-archive", "~> 1.1.7"
+  gem.add_dependency "base64", "~> 0.2"
+  gem.add_dependency "biodiversity", "~> 6.0"
+  gem.add_dependency "csv", "~> 3.3"
+  gem.add_dependency "dwc-archive", "~> 1.1.9"
+  gem.add_dependency "fiddle", "~> 1.1"
   gem.add_dependency "gn_uuid", "~> 0.5"
   gem.add_dependency "htmlentities", "~> 4.3"
   gem.add_dependency "nokogiri", "~> 1.16"
+  gem.add_dependency "ostruct", "~> 0.6"
   gem.add_dependency "rest-client", "~> 2.1"
   gem.add_dependency "ruby-xz", "~> 1.0"
   gem.add_dependency "rubyzip", "~> 2.3"
@@ -44,5 +48,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rake", "~> 13.2"
   gem.add_development_dependency "rspec", "~> 3.13"
   gem.add_development_dependency "rubocop", "~> 1.66"
-                    gem.add_development_dependency "ruby-lsp", "~> 0.17"
+  gem.add_development_dependency "ruby-lsp", "~> 0.17"
 end
