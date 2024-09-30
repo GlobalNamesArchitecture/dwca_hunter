@@ -51,23 +51,23 @@ module DwcaHunter
                       headers: true)
       file.each_with_index do |row, i|
         taxon_id = row["ID"].strip
-        name_string = row["Taxon_name"].strip
-        authors = row["Authors__abbreviated_"]
+        name_string = row["Taxon name"].strip
+        authors = row["Authors"]
         authors = authors.nil? ? "" : authors.strip
-        rank = row["Rank"].strip
+        rank = row["Rank.Rank name"].strip
         reference = row["Current name"]
         reference = reference.nil? ? "" : reference.strip
-        year = row["Year_of_effective_publication"]
-        status = row["Name_status"].strip
+        year = row["Year of effective publication"]
+        status = row["Name status"].strip
         code = "ICN"
 
-        @names << { taxon_id: taxon_id,
+        @names << { taxon_id:,
                     name_string: "#{name_string} #{authors}".strip,
-                    rank: rank,
-                    status: status,
-                    year: year,
-                    reference: reference,
-                    code: code }
+                    rank:,
+                    status:,
+                    year:,
+                    reference:,
+                    code: }
         puts "Processed %s names" % i if i % 10_000 == 0
       end
     end
