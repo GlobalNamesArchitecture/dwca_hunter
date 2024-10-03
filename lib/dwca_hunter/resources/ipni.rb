@@ -1,4 +1,4 @@
-require "xz"
+require "open3"
 
 module DwcaHunter
   # Resource for FishBase
@@ -19,8 +19,16 @@ module DwcaHunter
 
     def unpack
       puts "Unpacking #{@download_path}"
-      XZ.decompress_file(@download_path, @download_path[0...-3])
+      success = system("xz -dk #{@download_path}")
+      return if success
+
+      raise "Error decompressing file"
     end
+
+    # def unpackold
+    #   puts "Unpacking #{@download_path}"
+    #   XZ.decompress_file(@download_path, @download_path[0...-3])
+    # end
 
     def download
       puts "Download by hand from"

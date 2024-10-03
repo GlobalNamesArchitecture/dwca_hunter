@@ -36,7 +36,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency "nokogiri", "~> 1.16"
   gem.add_dependency "ostruct", "~> 0.6"
   gem.add_dependency "rest-client", "~> 2.1"
-  gem.add_dependency "ruby-xz", "~> 1.0"
   gem.add_dependency "rubyzip", "~> 2.3"
   gem.add_dependency "thor", "~> 1.3"
 

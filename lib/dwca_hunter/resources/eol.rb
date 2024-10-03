@@ -1,5 +1,3 @@
-require "xz"
-
 module DwcaHunter
   # Resource for FishBase
   class ResourceEOL < DwcaHunter::Resource

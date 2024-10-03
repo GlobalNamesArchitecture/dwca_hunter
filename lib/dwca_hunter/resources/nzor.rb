@@ -5,7 +5,8 @@ module DwcaHunter
   # Resource for FishBase
   class ResourceNZOR < DwcaHunter::Resource
     attr_reader :title, :abbr
-    def initialize(opts = {download: false}) #download: false, unpack: false})
+
+    def initialize(opts = { download: false }) # download: false, unpack: false})
       @command = "nzor"
       @title = "New Zealand Organizm Register"
       @abbr = "NZOR"
@@ -14,17 +15,16 @@ module DwcaHunter
       @uuid = "365ee637-7189-4551-a52a-74aa79d3ee2f"
       @download_dir = File.join(Dir.tmpdir, "dwca_hunter", "nzor")
       @download_path = File.join(@download_dir, "nzor.jsonl")
-      @data = {sci_names: [], vern_names: []}
+      @data = { sci_names: [], vern_names: [] }
       @extensions = []
       super
     end
 
     def download
-      f = File.open(@download_path, 'w:utf-8')
-      headers = { accept: :json}
+      f = File.open(@download_path, "w:utf-8")
+      headers = { accept: :json }
       i = 0
-      while
-        i += 1
+      while i += 1
         resp = RestClient.get(@url + i.to_s, headers)
         puts "Processed #{i} pages" if (i % 100).zero?
         sleep(0.1)
@@ -32,15 +32,14 @@ module DwcaHunter
         f.write("\n")
         begin
           res = JSON.parse(resp.body)
-          break if res["names"].size == 0
+          break if res["names"].empty?
         rescue JSON::ParserError => e
           puts "Error parsing JSON: #{e.message}"
         end
       end
     end
 
-    def unpack
-    end
+    def unpack; end
 
     def make_dwca
       organize_data
@@ -56,7 +55,7 @@ module DwcaHunter
         klass: nil,
         order: nil,
         family: nil,
-        genus: nil,
+        genus: nil
       }
 
       cl.each do |e|
@@ -81,7 +80,7 @@ module DwcaHunter
 
     def get_sci_name(n)
       clsf = get_classification(n["classificationHierarchy"])
-      res = {
+      {
         id: n["nameId"],
         name: n["fullName"],
         rank: n["rank"],
@@ -93,16 +92,15 @@ module DwcaHunter
         klass: clsf[:klass],
         order: clsf[:order],
         family: clsf[:family],
-        genus: clsf[:genus],
+        genus: clsf[:genus]
       }
-      res
     end
 
     def get_vern_name(n)
       sci_name_id = nil
       apps = nil
       concepts = n["concepts"]
-      if !concepts.nil?
+      unless concepts.nil?
         concepts.each do |c|
           a = c["applications"]
           if !a.nil? && a.size > 0
@@ -114,37 +112,42 @@ module DwcaHunter
       if apps && apps.size > 0 && apps[0]["type"] == "is vernacular for"
         sci_name_id = apps[0].dig("concept", "name", "nameId")
       end
-      
-      res = {
+
+      {
         id: n["nameId"],
         name: n["fullName"],
-        sci_name_id: sci_name_id,
-        language: lang(n["language"]),
+        sci_name_id:,
+        language: lang(n["language"])
       }
-      res
     end
 
     def lang(l)
       case l
       when "English"
-        return "en"
+        "en"
       when "Māori"
-        return "mi"
+        "mi"
       else
-        return "nil"
+        "nil"
       end
     end
 
     def organize_data
-      DwcaHunter::logger_write(self.object_id,
-                               "Organizing data")
-      File.readlines(@download_path).each_with_index do |l, idx|
+      DwcaHunter.logger_write(object_id,
+                              "Organizing data")
+      File.readlines(@download_path).each_with_index do |l, _idx|
         l_obj = JSON.parse(l)
         l_obj["names"].each do |n|
           klass = n["class"]
           case klass
           when "Scientific Name"
-            @data[:sci_names] << get_sci_name(n)
+            name = get_sci_name(n)
+            if name[:id] == ""
+              puts "Empty id for #{name[:name]}"
+              next
+            end
+
+            @data[:sci_names] << name
           when "Vernacular Name"
             vn = get_vern_name(n)
             if !vn[:sci_name_id].nil?
@@ -154,28 +157,25 @@ module DwcaHunter
               puts vn
             end
 
-          else
           end
         end
       end
     end
 
     def generate_dwca
-      DwcaHunter::logger_write(self.object_id,
-                               'Creating DarwinCore Archive file')
+      DwcaHunter.logger_write(object_id,
+                              "Creating DarwinCore Archive file")
 
       core_init
       eml_init
-      DwcaHunter::logger_write(self.object_id, 'Assembling Core Data')
+      DwcaHunter.logger_write(object_id, "Assembling Core Data")
       count = 0
       @data[:sci_names].each do |d|
         count += 1
-        if count % 10000 == 0
-          DwcaHunter::logger_write(self.object_id, "Core row #{count}")
-        end
-        @core << [d[:name_id], d[:acceptedNameId], d[:name], d[:kingdom],
-          d[:phylum], d[:klass], d[:order], d[:family], d[:genus],
-          d[:status], d[:rank], d[:code]]
+        DwcaHunter.logger_write(object_id, "Core row #{count}") if count % 10_000 == 0
+        @core << [d[:id], d[:acceptedNameId], d[:name], d[:kingdom],
+                  d[:phylum], d[:klass], d[:order], d[:family], d[:genus],
+                  d[:status], d[:rank], d[:code]]
       end
       @data[:vern_names].each do |d|
         @extensions[0][:data] << [d[:sci_name_id], d[:name], d[:language]]
@@ -190,8 +190,7 @@ module DwcaHunter
         authors: [],
         metadata_providers: [
           { first_name: "Dmitry",
-            last_name: "Mozzherin",
-          }
+            last_name: "Mozzherin" }
         ],
         abstract: "NZOR is an actively maintained compilation of all " \
                   "organism names relevant to New Zealand: indigenous, " \
@@ -225,7 +224,8 @@ module DwcaHunter
                 "http://rs.tdwg.org/dwc/terms/vernacularName",
                 "http://purl.org/dc/terms/language"]],
         file_name: "vernacular_names.txt",
-        row_type: "http://rs.gbif.org/terms/1.0/VernacularName" }
+        row_type: "http://rs.gbif.org/terms/1.0/VernacularName"
+      }
     end
   end
 end
