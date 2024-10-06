@@ -2,11 +2,11 @@
 
 module DwcaHunter
   class ResourceWorldVascPlants < DwcaHunter::Resource
-    def initialize(opts = { download: true })
+    def initialize(opts = { download: false, unpack: false })
       @parser = Biodiversity::Parser
       @command = "wcvp"
       @title = "The World Checklist of Vascular Plants"
-      @url = "http://sftp.kew.org/pub/data-repositories/WCVP/wcvp_v7_dec_2021.zip"
+      @url = "https://sftp.kew.org/pub/data-repositories/WCVP/wcvp.zip"
       @UUID = "814d1a77-2234-449b-af4a-138e0e1b1326"
       @download_dir = File.join(Dir.tmpdir, "dwca_hunter", "wcvp")
       @download_path = File.join(@download_dir, "data.zip")
@@ -30,7 +30,7 @@ module DwcaHunter
     end
 
     def make_dwca
-      DwcaHunter.logger_write(object_id, "Extracting data")
+      DwcaHunter.logger_write(object_id, "Getting data")
       get_names
       generate_dwca
     end
@@ -45,7 +45,7 @@ module DwcaHunter
     def find_csv_file
       Dir.chdir(@download_dir)
       Dir.entries(".").each do |f|
-        return f if f[-4..-1] == ".txt"
+        return f if f == "wcvp_names.csv"
       end
     end
 
@@ -96,36 +96,39 @@ module DwcaHunter
       @names_index = {}
       file = CSV.open(File.join(@download_dir, find_csv_file),
                       headers: true, col_sep: "|", quote_char: "\b")
-      file.each do |row|
-        taxon_id = row["kew_id"]
+      file.each_with_index do |row, i|
+        puts "Processing row #{i + 1}" if ((i + 1) % 100_000).zero?
+        taxon_id = row["plant_name_id"]
+        local_id = row["powo_id"]
         domain = "Plantae"
         phylum = "Tracheophyta"
         family = row["family"].to_s.strip
         genus = row["genus"].to_s.strip
         next if genus[0].upcase != genus[0]
 
-        accepted_id = row["accepted_kew_id"].to_s.strip
+        accepted_id = row["accepted_plant_name_id"].to_s.strip
         accepted_id = nil if accepted_id.empty?
         name_string = row["taxon_name"].to_s.strip
         next if name_string.strip.empty?
 
-        authors = row["authors"].to_s.strip
+        authors = row["taxon_authors"].to_s.strip
         name_string = "#{name_string} #{authors}" unless authors.empty?
-        taxonomic_status = row["taxonomic_status"].to_s.strip.downcase.gsub("_", " ")
+        taxonomic_status = row["taxon_status"].to_s.strip.downcase.gsub("_", " ")
 
-        rank = row["rank"].to_s.strip.downcase
+        rank = row["taxon_rank"].to_s.strip.downcase
         rank = nil if rank.empty?
 
         @names << {
-          taxon_id: taxon_id,
-          domain: domain,
-          phylum: phylum,
-          family: family,
-          genus: genus,
+          taxon_id:,
+          local_id:,
+          domain:,
+          phylum:,
+          family:,
+          genus:,
           current_id: accepted_id,
-          name_string: name_string,
-          taxonomic_status: taxonomic_status,
-          rank: rank,
+          name_string:,
+          taxonomic_status:,
+          rank:,
           nom_code: "ICN"
         }
       end
@@ -134,6 +137,7 @@ module DwcaHunter
     def generate_dwca
       DwcaHunter.logger_write(object_id, "Creating DarwinCore Archive file")
       @core = [["http://rs.tdwg.org/dwc/terms/taxonID",
+                "http://globalnames.org/terms/localID",
                 "http://rs.tdwg.org/dwc/terms/scientificName",
                 "http://rs.tdwg.org/dwc/terms/acceptedNameUsageID",
                 "http://rs.tdwg.org/dwc/terms/domain",
@@ -144,7 +148,7 @@ module DwcaHunter
                 "http://rs.tdwg.org/dwc/terms/taxonomicStatus",
                 "http://rs.tdwg.org/dwc/terms/nomenclaturalCode"]]
       @names.each do |n|
-        @core << [n[:taxon_id], n[:name_string], n[:current_id],
+        @core << [n[:taxon_id], n[:local_id], n[:name_string], n[:current_id],
                   n[:domain], n[:phylum], n[:family],
                   n[:genus], n[:rank], n[:taxonomic_status], n[:nom_code]]
       end
