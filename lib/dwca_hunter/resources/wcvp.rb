@@ -2,7 +2,7 @@
 
 module DwcaHunter
   class ResourceWorldVascPlants < DwcaHunter::Resource
-    def initialize(opts = { download: false, unpack: false })
+    def initialize(opts = { download: true, unpack: true })
       @parser = Biodiversity::Parser
       @command = "wcvp"
       @title = "The World Checklist of Vascular Plants"
