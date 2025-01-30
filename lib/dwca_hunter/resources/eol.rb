@@ -39,6 +39,8 @@ module DwcaHunter
         DwcaHunter.logger_write(object_id, "Raw file row #{count}") if (count % 1_000_000).zero?
         id = row["page_id"].strip
         name = row["preferred_canonical_for_page"].strip
+        words = name.split(" ")
+        name = name.capitalize if words.size == 1
         k = "#{id}|#{name}"
         next if uniq.key?(k)
 
