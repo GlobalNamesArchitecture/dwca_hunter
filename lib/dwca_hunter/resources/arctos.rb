@@ -89,7 +89,7 @@ module DwcaHunter
 
       names = {}
       file.each_with_index do |row, i|
-        next if row["term_type"].nil?
+        next if row["term_type"].nil? || row["name_type"] != "Linnean"
 
         name = row["scientific_name"]
         names[name] = if names.key?(name)
