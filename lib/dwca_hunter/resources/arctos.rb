@@ -44,7 +44,7 @@ module DwcaHunter
     def get_names
       Dir.chdir(@download_dir)
       collect_synonyms
-      collect_vernaculars
+      # collect_vernaculars
       collect_names
     end
 
@@ -104,7 +104,7 @@ module DwcaHunter
         canonical = m[0]
         v = m[1]
         taxon_id = "gn_#{i + 1}"
-        res = { taxon_id: taxon_id,
+        res = { taxon_id:,
                 name_string: canonical,
                 kingdom: v[:kingdom],
                 phylum: v[:phylum],
@@ -126,7 +126,7 @@ module DwcaHunter
       return unless @vernaculars_hash.key?(canonical)
 
       @vernaculars_hash[canonical].each do |vern|
-        @vernaculars << { taxon_id: taxon_id, vern: vern }
+        @vernaculars << { taxon_id:, vern: }
       end
     end
 
@@ -134,7 +134,7 @@ module DwcaHunter
       return unless @synonyms_hash.key?(canonical)
 
       @synonyms_hash[canonical].each do |syn|
-        @synonyms << { taxon_id: taxon_id, name_string: syn[:name_string],
+        @synonyms << { taxon_id:, name_string: syn[:name_string],
                        status: syn[:status] }
       end
     end
