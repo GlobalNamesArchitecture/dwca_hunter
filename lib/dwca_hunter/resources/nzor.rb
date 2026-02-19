@@ -6,7 +6,7 @@ module DwcaHunter
   class ResourceNZOR < DwcaHunter::Resource
     attr_reader :title, :abbr
 
-    def initialize(opts = { download: false }) # download: false, unpack: false})
+    def initialize(opts = { download: true }) # download: false, unpack: false})
       @command = "nzor"
       @title = "New Zealand Organizm Register"
       @abbr = "NZOR"
